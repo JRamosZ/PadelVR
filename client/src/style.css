@@ -82,9 +82,11 @@ a {
 }
 .welcome {
   width: min(100%, 1120px);
-  margin: auto;
+  margin: 0 auto;
   padding: 70px 0 56px;
   position: relative;
+  flex: 1;
+  align-self: stretch;
 }
 .eyebrow {
   margin: 0 0 22px;
@@ -167,6 +169,93 @@ h1 {
   top: 34%;
   box-shadow: inset -3px -3px 0 rgba(0, 0, 0, 0.12);
 }
+.home-courts {
+  position: relative;
+  z-index: 1;
+  margin-top: 58px;
+}
+.home-courts-heading {
+  margin-bottom: 18px;
+}
+.home-courts-heading .eyebrow {
+  margin-bottom: 5px;
+}
+.home-courts-heading h2 {
+  margin: 0;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 36px;
+  line-height: 1;
+}
+.home-courts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 245px), 1fr));
+  gap: 14px;
+}
+.home-court-card {
+  min-height: 88px;
+  padding: 17px 19px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid #d7ded7;
+  background: rgba(255, 255, 255, 0.72);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+.home-court-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--green);
+  box-shadow: 0 9px 22px rgba(31, 105, 85, 0.12);
+}
+.home-court-card:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: 3px;
+}
+.home-court-card-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  background: var(--green);
+  color: #fff;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+}
+.home-court-card-content {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 5px;
+}
+.home-court-card-content strong {
+  overflow: hidden;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.home-court-status {
+  color: #8c5f34;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.home-court-status.is-available {
+  color: var(--green);
+}
+.home-court-card-arrow {
+  color: var(--green);
+  font-size: 23px;
+}
+.home-courts-message {
+  margin: 0;
+  color: #65716b;
+  font-size: 14px;
+}
+.home-courts-error {
+  color: #9b3f33;
+}
 footer {
   height: 54px;
   border-top: 1px solid #dce2dc;
@@ -204,7 +293,17 @@ footer span {
     top: 66%;
     opacity: 0.88;
   }
-  footer {
+  .home-courts {
+    margin-top: 58px;
+  }
+  .home-courts-grid {
+    grid-template-columns: 1fr;
+  }
+  .home-court-card {
+    min-height: 76px;
+    padding: 13px 15px;
+  }
+  .home-footer {
     margin-top: auto;
   }
 }

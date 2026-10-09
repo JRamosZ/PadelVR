@@ -1,53 +1,38 @@
-import {useEffect, useState} from "react";
+import CourtSetupPage from "./pages/CourtSetupPage.jsx";
+import HomePage from "./pages/HomePage.jsx";
+import NewMatchSetupPage from "./pages/NewMatchSetupPage.jsx";
+import ScoreboardPage from "./pages/ScoreboardPage.jsx";
 
 export default function App() {
-  const [apiStatus, setApiStatus] = useState("checking");
+  const pathSegments = window.location.pathname.split("/").filter(Boolean);
 
-  useEffect(() => {
-    fetch("/api/health")
-      .then((response) => {
-        if (!response.ok) throw new Error("API unavailable");
-        return response.json();
-      })
-      .then(() => setApiStatus("connected"))
-      .catch(() => setApiStatus("offline"));
-  }, []);
+  if (pathSegments.length === 0) {
+    return <HomePage />;
+  }
+
+  if (pathSegments.length === 1) {
+    return <CourtSetupPage courtId={pathSegments[0]} />;
+  }
+
+  if (
+    pathSegments.length === 3 &&
+    pathSegments[1] === "matches" &&
+    pathSegments[2] === "new"
+  ) {
+    return <NewMatchSetupPage courtId={pathSegments[0]} />;
+  }
+
+  if (
+    pathSegments.length === 3 &&
+    pathSegments[1] === "matches" &&
+    pathSegments[2] !== "new"
+  ) {
+    return <ScoreboardPage courtId={pathSegments[0]} matchId={pathSegments[2]} />;
+  }
 
   return (
-    <main className="shell">
-      <header className="topbar">
-        <a className="wordmark" href="/" aria-label="PadelVR home">
-          <span className="wordmark-mark" aria-hidden="true">
-            P
-          </span>
-          PADEL<span>VR</span>
-        </a>
-        <div className="connection" aria-live="polite">
-          <span className={`connection-dot ${apiStatus}`} />
-          API {apiStatus}
-        </div>
-      </header>
-      <section className="welcome">
-        <p className="eyebrow">YOUR COURT, REIMAGINED</p>
-        <h1>
-          Padel starts
-          <br />
-          here.
-        </h1>
-        <p className="intro">Your new home for the game is ready to take shape.</p>
-        <div className="court" aria-hidden="true">
-          <div className="court-lines">
-            <span />
-            <span />
-            <span />
-          </div>
-          <div className="court-net" />
-          <div className="court-ball" />
-        </div>
-      </section>
-      <footer>
-        PADELVR <span>·</span> 01 / 01
-      </footer>
+    <main className="setup-page">
+      <h1>Página no encontrada</h1>
     </main>
   );
 }

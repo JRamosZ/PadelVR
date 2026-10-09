@@ -1,6 +1,6 @@
 import {Router} from "express";
 
-export function createHealthRouter(controller) {
+export function createMatchModesRouter(controller) {
   const router = Router();
 
   router.get("/", controller);
