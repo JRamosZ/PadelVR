@@ -346,6 +346,13 @@ const matchSchema = new Schema(
       required: true,
     },
 
+    revision: {
+      type: Number,
+      min: 0,
+      default: 0,
+      required: true,
+    },
+
     format: {
       type: formatSchema,
       default: () => ({}),

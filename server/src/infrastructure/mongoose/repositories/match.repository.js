@@ -2,18 +2,18 @@ import MatchModel from "../models/match.model.js";
 
 export function createMatchRepository() {
   return {
-    async findLatestByCourtId(courtId) {
-      const match = await MatchModel.findOne({courtId})
+    async findLatestByCourtId(courtId, session) {
+      let query = MatchModel.findOne({courtId})
         .sort({createdAt: -1, _id: -1})
-        .select("_id status startedAt")
-        .lean();
+        .select("_id courtId status format rules state history revision startedAt");
+      if (session) query = query.session(session);
+      const match = await query.lean();
 
       if (!match) return null;
-
       return {
+        ...match,
         id: match._id.toString(),
-        status: match.status,
-        startedAt: match.startedAt,
+        courtId: match.courtId.toString(),
       };
     },
 
@@ -46,6 +46,24 @@ export function createMatchRepository() {
         .lean();
 
       return Boolean(result);
+    },
+
+    async persistSensorTransition({match, transition, startedAt, finishedAt, session}) {
+      const update = {
+        status: transition.status,
+        state: transition.state,
+        history: transition.history,
+        startedAt,
+        finishedAt,
+      };
+
+      const persistedMatch = await MatchModel.findOneAndUpdate(
+        {_id: match._id, revision: match.revision ?? 0, status: match.status},
+        {$set: update, $inc: {revision: 1}},
+        {new: true, runValidators: true, session},
+      ).lean();
+
+      return persistedMatch;
     },
   };
 }

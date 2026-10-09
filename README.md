@@ -106,6 +106,26 @@ Match Engine
 
 Esto permite cambiar posteriormente la tecnología utilizada para detectar el golpe sin tener que modificar la lógica completa del sistema.
 
+### Integración de comandos de sensores
+
+El backend recibe comandos mediante `POST /api/v1/sensor-commands`:
+
+```json
+{
+  "commandId": "cmd_000124",
+  "sensorId": "sensor_left",
+  "command": "ADD_POINT",
+  "sequence": 124,
+  "timestamp": "2026-10-09T19:59:59.000Z"
+}
+```
+
+El sensor no envía `matchId` ni equipo. El backend localiza la cancha y el partido más reciente a partir del sensor registrado, traduce su lado físico (`LEFT`/`RIGHT`) al equipo que ocupa ese lado actualmente y llama al Match Engine. El primer `ADD_POINT` inicia un partido en estado `READY`. Los comandos se procesan de forma idempotente por `commandId` y por la combinación de sensor y secuencia; las secuencias atrasadas se rechazan.
+
+La transición del marcador, los documentos `MatchEvent` y el `SensorEvent` se guardan en una transacción de MongoDB. Por ello, MongoDB debe ejecutarse como replica set o clúster compatible con transacciones.
+
+La pantalla puede suscribirse a `ws://<servidor>:<puerto>/ws?matchId=<id>`. Recibirá un mensaje `match.subscribed` al conectarse y mensajes `match.updated` con el estado, la revisión y los eventos de cada transición. Cada actualización se envía únicamente a clientes suscritos a ese partido.
+
 ---
 
 # 🎾 Detección del punto
