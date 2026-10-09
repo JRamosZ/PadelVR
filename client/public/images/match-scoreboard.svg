@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 700" fill="none">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="1400" y2="700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#080a0a"/>
+      <stop offset=".58" stop-color="#171a19"/>
+      <stop offset="1" stop-color="#080909"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="690" y1="470" x2="720" y2="700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#242522"/>
+      <stop offset="1" stop-color="#090a09"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="850" y1="130" x2="1290" y2="540" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#151717"/>
+      <stop offset="1" stop-color="#050606"/>
+    </linearGradient>
+    <linearGradient id="screenBorder" x1="830" y1="120" x2="1300" y2="550" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8e7541"/>
+      <stop offset=".45" stop-color="#292821"/>
+      <stop offset="1" stop-color="#806b3d"/>
+    </linearGradient>
+    <pattern id="mesh" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M0 0h24M0 0v24" stroke="#B5B8B1" stroke-opacity=".22" stroke-width="1"/>
+    </pattern>
+    <filter id="shadow" x="760" y="80" width="620" height="550" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="24"/>
+    </filter>
+  </defs>
+  <path fill="url(#wall)" d="M0 0h1400v700H0z"/>
+  <path fill="url(#mesh)" d="M0 0h1400v550H0z"/>
+  <path d="M165 0v512m340-512v475m326-475v450m334-450v422m212-422v392M0 126h1400M0 344h1400" stroke="#AAAFA9" stroke-opacity=".26" stroke-width="8"/>
+  <path d="m0 559 595 1 805-165v305H0z" fill="url(#floor)"/>
+  <path d="m30 672 553-109 752 0M0 604l593-113 807 0" stroke="#BBB6A9" stroke-opacity=".18" stroke-width="3"/>
+  <path d="M779 105 1310 70v469l-531 35z" fill="#000" fill-opacity=".75" filter="url(#shadow)"/>
+  <path d="m799 116 503-32v423l-503 32z" fill="#090a09" stroke="url(#screenBorder)" stroke-width="13"/>
+  <path d="m822 140 457-29v370l-457 29z" fill="url(#screen)" stroke="#33332E" stroke-width="3"/>
+  <g fill="#D4AA4F">
+    <path d="m1050 162-12 12 12 12 12-12-12-12Zm-17 17-12 12 12 12 12-12-12-12Zm34 0-12 12 12 12 12-12-12-12Zm-17 17-12 12 12 12 12-12-12-12Z"/>
+  </g>
+  <path d="m857 229 388-25" stroke="#827044" stroke-opacity=".7" stroke-width="2"/>
+  <text x="1050" y="324" fill="#DAB150" font-family="Arial,sans-serif" font-size="72" font-weight="600" text-anchor="middle">6</text>
+  <text x="1174" y="324" fill="#F2F0EA" font-family="Arial,sans-serif" font-size="72" font-weight="500" text-anchor="middle">4</text>
+  <path d="m1112 268v87" stroke="#928971" stroke-opacity=".55" stroke-width="2"/>
+  <text x="1050" y="394" fill="#C5C4BF" font-family="Arial,sans-serif" font-size="48" font-weight="400" text-anchor="middle">3</text>
+  <text x="1174" y="394" fill="#C5C4BF" font-family="Arial,sans-serif" font-size="48" font-weight="400" text-anchor="middle">2</text>
+  <path d="M891 425h319" stroke="#827044" stroke-opacity=".55"/>
+  <text x="1050" y="456" fill="#B8A16D" font-family="Arial,sans-serif" font-size="16" letter-spacing="5" text-anchor="middle">SET 1</text>
+  <text x="1174" y="456" fill="#DAB150" font-family="Arial,sans-serif" font-size="17" font-weight="600" letter-spacing="2" text-anchor="middle">GAME 4</text>
+  <path d="m838 120 11 405m-518-395v391m334-408v397m336-419v394m246-409v392M814 201l475-30M813 293l474-30M812 385l473-29M811 477l471-29" stroke="#E6E3D8" stroke-opacity=".13" stroke-width="2"/>
+  <path d="m0 0 378 0L0 354z" fill="#050606" fill-opacity=".42"/>
+  <path d="m1400 0-265 0 265 252z" fill="#C29845" fill-opacity=".22"/>
+  <path d="m0 620 177 80H0z" fill="#C29845" fill-opacity=".18"/>
+</svg>
