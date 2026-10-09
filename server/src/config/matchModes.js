@@ -4,7 +4,7 @@ const matchModes = {
     name: "Torneo",
     description: "Ideal para partidos competitivos y torneos.",
     icon: "trophy",
-    features: ["3 sets", "6 games por set", "Tie-break en 6-6"],
+    features: ["3 sets", "6 juegos por set", "Tie-break en 6-6"],
     format: {
       type: "BEST_OF_THREE",
       setsToWin: 2,
@@ -33,7 +33,7 @@ const matchModes = {
     name: "Rápido",
     description: "Perfecto para partidos casuales o de práctica.",
     icon: "lightning",
-    features: ["1 set", "6 games por set", "Sin tie-break"],
+    features: ["1 set", "6 juegos por set", "Sin tie-break"],
     format: {
       type: "SINGLE_SET",
       setsToWin: 1,
@@ -62,7 +62,7 @@ const matchModes = {
     name: "Amistoso",
     description: "Disfruta del juego sin presión.",
     icon: "players",
-    features: ["1 set", "6 games por set", "Con tie-break"],
+    features: ["1 set", "6 juegos por set", "Con tie-break"],
     format: {
       type: "SINGLE_SET",
       setsToWin: 1,
