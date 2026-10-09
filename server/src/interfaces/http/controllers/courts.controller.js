@@ -1,4 +1,9 @@
-export function createCourtsController({getCourtById, getLatestMatchForCourt, getCourtSetup}) {
+export function createCourtsController({
+  getCourtById,
+  getLatestMatchForCourt,
+  getCourtSetup,
+  createMatch,
+}) {
   return {
     getCourt: async (request, response, next) => {
       try {
@@ -22,6 +27,15 @@ export function createCourtsController({getCourtById, getLatestMatchForCourt, ge
       try {
         const result = await getCourtSetup(request.params.courtId);
         response.json(result);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    createMatch: async (request, response, next) => {
+      try {
+        const match = await createMatch(request.params.courtId, request.body);
+        response.status(201).json({match});
       } catch (error) {
         next(error);
       }

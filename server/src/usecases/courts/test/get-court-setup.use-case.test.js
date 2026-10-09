@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {createGetCourtSetupUseCase} from "./get-court-setup.use-case.js";
+import {createGetCourtSetupUseCase} from "../get-court-setup.use-case.js";
 
 const courtId = "507f1f77bcf86cd799439011";
 

@@ -9,7 +9,8 @@ export default function CourtSetupPage({courtId}) {
   const result = useCourtSetup(courtId);
   const [notice, setNotice] = useState("");
   const isReady = result.status === "ready";
-  const hasActiveMatch = isReady && result.match?.status === "ACTIVE";
+  const hasActiveMatch =
+    isReady && ["ACTIVE", "READY", "IN_PROGRESS", "PAUSED"].includes(result.match?.status);
 
   return (
     <main className="setup-page">
@@ -61,13 +62,15 @@ export default function CourtSetupPage({courtId}) {
                 title="Ver partido actual"
                 description={
                   hasActiveMatch
-                    ? "Consulta el marcador y el estado del partido en curso."
+                    ? "Consulta el marcador y el estado del partido actual."
                     : "No hay un partido activo en esta cancha."
                 }
                 descriptionId="current-match-description"
                 disabled={!hasActiveMatch}
                 onClick={() =>
-                  setNotice("La vista del partido actual estará disponible próximamente.")
+                  window.location.assign(
+                    `/${encodeURIComponent(courtId)}/matches/${encodeURIComponent(result.match.id)}`,
+                  )
                 }
               />
               <MatchOptionCard
@@ -76,7 +79,7 @@ export default function CourtSetupPage({courtId}) {
                 description="Configura los jugadores, reglas y condiciones del partido."
                 descriptionId="new-match-description"
                 onClick={() =>
-                  setNotice("La configuración del partido se diseñará en el siguiente paso.")
+                  window.location.assign(`/${encodeURIComponent(courtId)}/matches/new`)
                 }
               />
             </div>
