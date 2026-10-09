@@ -16,6 +16,7 @@ import {createGetCourtSetupUseCase} from "./usecases/courts/get-court-setup.use-
 import {createGetLatestMatchForCourtUseCase} from "./usecases/courts/get-latest-match-for-court.use-case.js";
 import {createSeedInitialCourtUseCase} from "./usecases/courts/seed-initial-court.use-case.js";
 import {createCreateMatchUseCase} from "./usecases/courts/create-match.use-case.js";
+import {createListCourtsUseCase} from "./usecases/courts/list-courts.use-case.js";
 import {createGetSystemHealthUseCase} from "./usecases/health/get-system-health.use-case.js";
 import matchModes from "./config/matchModes.js";
 import {createGetMatchModesUseCase} from "./usecases/match-modes/get-match-modes.use-case.js";
@@ -33,12 +34,14 @@ export function createApplication() {
   const seedInitialCourt = createSeedInitialCourtUseCase(courtRepository);
   const getMatchModes = createGetMatchModesUseCase(matchModes);
   const createMatch = createCreateMatchUseCase({courtRepository, matchRepository, matchModes});
+  const listCourts = createListCourtsUseCase(courtRepository);
 
   const courtsController = createCourtsController({
     getCourtById,
     getLatestMatchForCourt,
     getCourtSetup,
     createMatch,
+    listCourts,
   });
   const healthController = createHealthController(getSystemHealth);
   const matchModesController = createMatchModesController(getMatchModes);

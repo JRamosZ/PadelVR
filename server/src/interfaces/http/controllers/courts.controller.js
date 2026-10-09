@@ -3,8 +3,17 @@ export function createCourtsController({
   getLatestMatchForCourt,
   getCourtSetup,
   createMatch,
+  listCourts,
 }) {
   return {
+    list: async (_request, response, next) => {
+      try {
+        response.json({courts: await listCourts()});
+      } catch (error) {
+        next(error);
+      }
+    },
+
     getCourt: async (request, response, next) => {
       try {
         const court = await getCourtById(request.params.courtId);

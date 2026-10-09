@@ -33,6 +33,10 @@ export function getCourtSetup(courtId, signal) {
   return requestJson(`/api/courts/${encodeURIComponent(courtId)}/setup`, signal);
 }
 
+export function getCourts(signal) {
+  return requestJson("/api/courts", signal);
+}
+
 export function getApiHealth(signal) {
   return requestJson("/api/health", signal);
 }

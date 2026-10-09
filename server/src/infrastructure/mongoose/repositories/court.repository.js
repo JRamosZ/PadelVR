@@ -2,6 +2,19 @@ import CourtModel from "../models/court.model.js";
 
 export function createCourtRepository() {
   return {
+    async findAll() {
+      const courts = await CourtModel.find({})
+        .select("_id name status")
+        .sort({name: 1, _id: 1})
+        .lean();
+
+      return courts.map((court) => ({
+        id: court._id.toString(),
+        name: court.name,
+        status: court.status,
+      }));
+    },
+
     async findById(courtId) {
       const court = await CourtModel.findById(courtId)
         .select("_id name status")
