@@ -177,10 +177,7 @@ export function createCreateMatchUseCase({courtRepository, matchRepository, matc
           team: "A",
           playerId: "A-1",
         },
-        serviceOrder: {
-          A: "A-1",
-          B: "B-1",
-        },
+        serviceOrder: ["A-1", "B-1", "A-2", "B-2"],
         undoHistory: [],
         sideChange: {
           enabled: configuration.rules.sideChange.enabled,

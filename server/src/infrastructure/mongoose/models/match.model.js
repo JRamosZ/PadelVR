@@ -210,7 +210,7 @@ const currentGameSchema = new Schema(
     },
     tieBreakFirstServer: {
       type: String,
-      enum: SIDES,
+      enum: ["A-1", "A-2", "B-1", "B-2"],
       default: null,
     },
   },
@@ -227,20 +227,6 @@ const currentSetSchema = new Schema(
     },
     games: {
       type: teamScoreSchema,
-      required: true,
-    },
-  },
-  {_id: false},
-);
-
-const serviceOrderSchema = new Schema(
-  {
-    A: {
-      type: String,
-      required: true,
-    },
-    B: {
-      type: String,
       required: true,
     },
   },
@@ -299,9 +285,14 @@ const matchStateSchema = new Schema(
     },
 
     serviceOrder: {
-      type: serviceOrderSchema,
-      default: () => ({A: "A-1", B: "B-1"}),
+      type: [{type: String, enum: ["A-1", "A-2", "B-1", "B-2"]}],
+      default: () => ["A-1", "B-1", "A-2", "B-2"],
       required: true,
+      validate: {
+        validator: (order) =>
+          order.length === 4 && new Set(order).size === 4,
+        message: "La rotación de saque debe incluir a los cuatro jugadores una vez.",
+      },
     },
 
     undoHistory: {

@@ -19,17 +19,20 @@ function opposite(team) {
   return team === "A" ? "B" : "A";
 }
 
-function nextPlayer(playerId, team) {
-  const playerNumber = Number(playerId?.split("-").at(-1));
-  return `${team}-${playerNumber === 1 ? 2 : 1}`;
+function teamForPlayer(playerId) {
+  return playerId?.startsWith("A-") ? "A" : playerId?.startsWith("B-") ? "B" : null;
 }
 
 function normalizeServiceOrder(state) {
-  const order = state.serviceOrder ?? {};
-  return {
-    A: order.A ?? (state.server.team === "A" ? state.server.playerId : "A-1"),
-    B: order.B ?? (state.server.team === "B" ? state.server.playerId : "B-1"),
-  };
+  return Array.isArray(state.serviceOrder) ? [...state.serviceOrder] : [];
+}
+
+function nextServerPlayer(serviceOrder, playerId) {
+  const currentIndex = serviceOrder.indexOf(playerId);
+  if (currentIndex < 0) {
+    throw new MatchEngineError("The current server is missing from the service rotation.");
+  }
+  return serviceOrder[(currentIndex + 1) % serviceOrder.length];
 }
 
 function coreState(state) {
@@ -79,8 +82,21 @@ function validateInput({status, state, format, rules, command}) {
   ) {
     throw new MatchEngineError("The star-point configuration is invalid.");
   }
-  if (!TEAMS.includes(state.server.team) || typeof state.server.playerId !== "string") {
+  if (
+    !TEAMS.includes(state.server.team) ||
+    teamForPlayer(state.server.playerId) !== state.server.team ||
+    !["A-1", "A-2", "B-1", "B-2"].includes(state.server.playerId)
+  ) {
     throw new MatchEngineError("The current server is invalid.");
+  }
+  const serviceOrder = normalizeServiceOrder(state);
+  if (
+    serviceOrder.length !== 4 ||
+    new Set(serviceOrder).size !== 4 ||
+    serviceOrder.some((playerId) => !["A-1", "A-2", "B-1", "B-2"].includes(playerId)) ||
+    !serviceOrder.includes(state.server.playerId)
+  ) {
+    throw new MatchEngineError("The player service rotation is invalid.");
   }
   if (
     TEAMS.some(
@@ -102,7 +118,7 @@ function validateInput({status, state, format, rules, command}) {
   if (
     state.currentGame.type === "TIEBREAK" &&
     (!rules.tieBreak.enabled ||
-      !TEAMS.includes(state.currentGame.tieBreakFirstServer) ||
+      !["A-1", "A-2", "B-1", "B-2"].includes(state.currentGame.tieBreakFirstServer) ||
       TEAMS.some(
         (team) =>
           !Number.isInteger(state.currentGame.tieBreakPoints?.[team]) ||
@@ -151,23 +167,14 @@ function hasSetWinner(games, target) {
     : null;
 }
 
-function getTieBreakServer(firstServer, pointsServed) {
-  if (pointsServed === 0) {
-    return firstServer;
-  }
-  const block = Math.floor((pointsServed + 1) / 2);
-  return block % 2 === 0 ? firstServer : opposite(firstServer);
-}
-
-function rotateTieBreakServer(state, pointsScored, previousServerTeam) {
-  const nextTeam = getTieBreakServer(state.currentGame.tieBreakFirstServer, pointsScored);
-  if (nextTeam !== previousServerTeam) {
-    state.serviceOrder[previousServerTeam] = nextPlayer(
-      state.server.playerId,
-      previousServerTeam,
-    );
-  }
-  state.server = {team: nextTeam, playerId: state.serviceOrder[nextTeam]};
+function rotateTieBreakServer(state, pointsPlayed) {
+  const serviceBlock = Math.ceil(pointsPlayed / 2);
+  const firstServerIndex = state.serviceOrder.indexOf(
+    state.currentGame.tieBreakFirstServer,
+  );
+  const playerIndex = (firstServerIndex + serviceBlock) % state.serviceOrder.length;
+  const playerId = state.serviceOrder[playerIndex];
+  state.server = {team: teamForPlayer(playerId), playerId};
 }
 
 function updateAfterSetWon(state, history, status, winner, tieBreakPoints) {
@@ -219,7 +226,7 @@ function closeGame(state, history, format, rules, events, gameWinner, tieBreakPo
         points: {A: "0", B: "0"},
         tieBreakPoints: {A: 0, B: 0},
         advantagesPlayed: 0,
-        tieBreakFirstServer: state.server.team,
+        tieBreakFirstServer: state.server.playerId,
       };
       swapSides(state, "TIEBREAK_START", events);
       return "IN_PROGRESS";
@@ -266,11 +273,10 @@ function closeGame(state, history, format, rules, events, gameWinner, tieBreakPo
   }
 
   state.currentSet.games[gameWinner] += 1;
-  const firstServer = state.currentGame.tieBreakFirstServer;
-  const nextServingTeam = opposite(firstServer);
+  const nextServerId = nextServerPlayer(state.serviceOrder, state.currentGame.tieBreakFirstServer);
   state.server = {
-    team: nextServingTeam,
-    playerId: state.serviceOrder[nextServingTeam],
+    team: teamForPlayer(nextServerId),
+    playerId: nextServerId,
   };
   events.push({
     type: "GAME_WON",
@@ -373,7 +379,6 @@ function addPoint({status, state, history, format, rules, team}) {
   let finishedGame = false;
 
   if (nextState.currentGame.type === "TIEBREAK") {
-    const previousServerTeam = nextState.server.team;
     nextState.currentGame.tieBreakPoints[team] += 1;
     const tieBreakPoints = clone(nextState.currentGame.tieBreakPoints);
     const totalPoints = tieBreakPoints.A + tieBreakPoints.B;
@@ -385,7 +390,7 @@ function addPoint({status, state, history, format, rules, team}) {
         ? difference > 0 ? "A" : "B"
         : null;
 
-    rotateTieBreakServer(nextState, totalPoints, previousServerTeam);
+    rotateTieBreakServer(nextState, totalPoints);
     finishedGame = Boolean(tieBreakWinner);
     if (tieBreakWinner) {
       const resultingStatus = closeGame(
@@ -413,15 +418,13 @@ function addPoint({status, state, history, format, rules, team}) {
   } else {
     finishedGame = awardRegularPoint(nextState, team, rules);
     if (finishedGame) {
-      const servingTeam = nextState.server.team;
-      nextState.serviceOrder[servingTeam] = nextPlayer(
+      const nextServerId = nextServerPlayer(
+        nextState.serviceOrder,
         nextState.server.playerId,
-        servingTeam,
       );
-      const nextServingTeam = opposite(servingTeam);
       nextState.server = {
-        team: nextServingTeam,
-        playerId: nextState.serviceOrder[nextServingTeam],
+        team: teamForPlayer(nextServerId),
+        playerId: nextServerId,
       };
       const resultingStatus = closeGame(
         nextState,

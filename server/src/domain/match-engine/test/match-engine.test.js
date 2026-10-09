@@ -14,7 +14,7 @@ function createMatch(overrides = {}) {
       tieBreakFirstServer: null,
     },
     server: {team: "A", playerId: "A-1"},
-    serviceOrder: {A: "A-1", B: "B-1"},
+    serviceOrder: ["A-1", "B-1", "A-2", "B-2"],
     sideChange: {
       enabled: true,
       currentSides: {A: "LEFT", B: "RIGHT"},
@@ -118,7 +118,7 @@ test("emits point, game, set, and match events when a point wins a match", () =>
   assert.deepEqual(result.state.sideChange.currentSides, {A: "LEFT", B: "RIGHT"});
 });
 
-test("starts the next set with the next team's server after a set win", () => {
+test("starts the next set with the next player's turn after a set win", () => {
   const match = createMatch({
     format: {setsToWin: 2},
     state: {
@@ -136,6 +136,18 @@ test("starts the next set with the next team's server after a set win", () => {
   assert.equal(result.history.completedSets.length, 1);
 });
 
+test("rotates the serve through the four individual players game by game", () => {
+  let match = createMatch();
+  const expectedServers = ["B-1", "A-2", "B-2", "A-1"];
+
+  for (const expectedServer of expectedServers) {
+    match.state.currentGame.points = {A: "40", B: "0"};
+    const result = command(match, "ADD_POINT", "A");
+    assert.equal(result.state.server.playerId, expectedServer);
+    match = {...match, ...result};
+  }
+});
+
 test("enters a tie-break with the next server and changes sides", () => {
   const match = createMatch({
     state: {
@@ -148,7 +160,7 @@ test("enters a tie-break with the next server and changes sides", () => {
 
   assert.equal(result.state.currentGame.type, "TIEBREAK");
   assert.deepEqual(result.state.currentGame.tieBreakPoints, {A: 0, B: 0});
-  assert.equal(result.state.currentGame.tieBreakFirstServer, "B");
+  assert.equal(result.state.currentGame.tieBreakFirstServer, "B-1");
   assert.deepEqual(result.state.server, {team: "B", playerId: "B-1"});
   assert.deepEqual(result.state.sideChange.currentSides, {A: "RIGHT", B: "LEFT"});
   assert.equal(result.events.at(-1).details.reason, "TIEBREAK_START");
@@ -162,19 +174,20 @@ test("rotates tie-break service and switches sides after six points", () => {
         points: {A: "0", B: "0"},
         tieBreakPoints: {A: 0, B: 0},
         advantagesPlayed: 0,
-        tieBreakFirstServer: "A",
+        tieBreakFirstServer: "A-1",
       },
     },
   });
 
   let result = match;
+  const expectedServers = ["B-1", "B-1", "A-2", "A-2", "B-2", "B-2"];
   for (let index = 0; index < 6; index += 1) {
     result = {...result, ...command(result, "ADD_POINT", "A")};
+    assert.equal(result.state.server.playerId, expectedServers[index]);
   }
 
   assert.deepEqual(result.state.currentGame.tieBreakPoints, {A: 6, B: 0});
   assert.deepEqual(result.state.sideChange.currentSides, {A: "RIGHT", B: "LEFT"});
-  assert.equal(result.state.server.team, "B");
   assert.ok(result.events.some((event) => event.type === "SIDE_CHANGED"));
 });
 
@@ -187,10 +200,10 @@ test("closes a tie-break set only after the required lead", () => {
         points: {A: "0", B: "0"},
         tieBreakPoints: {A: 6, B: 6},
         advantagesPlayed: 0,
-        tieBreakFirstServer: "A",
+        tieBreakFirstServer: "A-1",
       },
       server: {team: "A", playerId: "A-2"},
-      serviceOrder: {A: "A-2", B: "B-1"},
+      serviceOrder: ["A-1", "B-1", "A-2", "B-2"],
     },
   });
 
