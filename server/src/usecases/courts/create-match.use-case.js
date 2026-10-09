@@ -170,11 +170,18 @@ export function createCreateMatchUseCase({courtRepository, matchRepository, matc
           type: "REGULAR",
           points: {A: "0", B: "0"},
           tieBreakPoints: null,
+          advantagesPlayed: 0,
+          tieBreakFirstServer: null,
         },
         server: {
           team: "A",
           playerId: "A-1",
         },
+        serviceOrder: {
+          A: "A-1",
+          B: "B-1",
+        },
+        undoHistory: [],
         sideChange: {
           enabled: configuration.rules.sideChange.enabled,
           currentSides: {A: "LEFT", B: "RIGHT"},

@@ -129,8 +129,7 @@ const rulesSchema = new Schema(
         default: true,
         required: true,
       },
-      // Configurable para el futuro; la lógica se implementará
-      // posteriormente en el Match Engine.
+      // Defines the supported end-change policy for the Match Engine.
       policy: {
         type: String,
         enum: ["STANDARD"],
@@ -199,9 +198,19 @@ const currentGameSchema = new Schema(
       required: true,
     },
 
-    // Solo se utiliza cuando type === "TIEBREAK".
     tieBreakPoints: {
       type: teamScoreSchema,
+      default: null,
+    },
+    advantagesPlayed: {
+      type: Number,
+      min: 0,
+      default: 0,
+      required: true,
+    },
+    tieBreakFirstServer: {
+      type: String,
+      enum: SIDES,
       default: null,
     },
   },
@@ -218,6 +227,20 @@ const currentSetSchema = new Schema(
     },
     games: {
       type: teamScoreSchema,
+      required: true,
+    },
+  },
+  {_id: false},
+);
+
+const serviceOrderSchema = new Schema(
+  {
+    A: {
+      type: String,
+      required: true,
+    },
+    B: {
+      type: String,
       required: true,
     },
   },
@@ -273,6 +296,17 @@ const matchStateSchema = new Schema(
     server: {
       type: serverSchema,
       required: true,
+    },
+
+    serviceOrder: {
+      type: serviceOrderSchema,
+      default: () => ({A: "A-1", B: "B-1"}),
+      required: true,
+    },
+
+    undoHistory: {
+      type: [Schema.Types.Mixed],
+      default: [],
     },
 
     // Indica si ya se realizó el cambio de lado
