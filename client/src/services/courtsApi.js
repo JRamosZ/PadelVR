@@ -56,3 +56,18 @@ export function createMatch(courtId, matchData, signal) {
     },
   );
 }
+
+export function getMatchForScoreboard(courtId, matchId, signal) {
+  return requestJson(
+    `/api/courts/${encodeURIComponent(courtId)}/matches/${encodeURIComponent(matchId)}`,
+    signal,
+  );
+}
+
+export function recordSensorCommand(command, signal) {
+  return requestJson("/api/v1/sensor-commands", signal, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(command),
+  });
+}

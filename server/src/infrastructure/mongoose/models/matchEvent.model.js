@@ -1,12 +1,13 @@
 import mongoose from "mongoose";
 
-const metadataSchema = new mongoose.Schema(
-  {
-    distance: Number,
-    confidence: Number,
-  },
-  { _id: false },
-);
+const EVENT_TYPES = [
+  "POINT_WON",
+  "POINT_UNDONE",
+  "GAME_WON",
+  "SET_WON",
+  "MATCH_WON",
+  "SIDE_CHANGED",
+];
 
 const matchEventSchema = new mongoose.Schema({
   matchId: {
@@ -16,29 +17,23 @@ const matchEventSchema = new mongoose.Schema({
   },
   type: {
     type: String,
+    enum: EVENT_TYPES,
     required: true,
   },
   team: {
     type: String,
     enum: ["A", "B"],
-    required: true,
-  },
-  source: {
-    type: String,
-    required: true,
-  },
-  sensorId: {
-    type: String,
-    required: true,
+    required() {
+      return this.type !== "SIDE_CHANGED";
+    },
   },
   timestamp: {
     type: Date,
     required: true,
     default: Date.now,
   },
-  metadata: {
-    type: metadataSchema,
-    required: true,
+  details: {
+    type: mongoose.Schema.Types.Mixed,
   },
 });
 

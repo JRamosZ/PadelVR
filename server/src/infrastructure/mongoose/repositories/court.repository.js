@@ -29,6 +29,38 @@ export function createCourtRepository() {
       };
     },
 
+    async findBySensorId(sensorId, session) {
+      let query = CourtModel.find({"sensorModules.sensorId": sensorId})
+        .select("_id name status sensorModules")
+        .lean();
+      if (session) query = query.session(session);
+      const courts = await query;
+
+      return courts.map((court) => ({
+        id: court._id.toString(),
+        name: court.name,
+        status: court.status,
+        sensorModules: court.sensorModules
+          .filter((module) => module.sensorId === sensorId)
+          .map((module) => ({
+            sensorId: module.sensorId,
+            side: module.side,
+            esp32Id: module.esp32Id,
+          })),
+      }));
+    },
+
+    async findByIdWithSensors(courtId) {
+      const court = await CourtModel.findById(courtId)
+        .select("_id sensorModules")
+        .lean();
+      if (!court) return null;
+      return {
+        id: court._id.toString(),
+        sensorModules: court.sensorModules.map(({sensorId, side}) => ({sensorId, side})),
+      };
+    },
+
     async existsById(courtId) {
       return Boolean(await CourtModel.exists({_id: courtId}));
     },

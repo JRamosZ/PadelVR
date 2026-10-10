@@ -20,10 +20,13 @@ export function createGetCourtSetupUseCase(courtRepository, matchRepository) {
     };
 
     if (court.status !== "AVAILABLE") {
-      return {court: courtSummary, match: null};
+      return {court: courtSummary, match: null, lastFinishedMatch: null};
     }
 
-    const match = await matchRepository.findLatestByCourtId(courtId);
+    const [match, lastFinishedMatch] = await Promise.all([
+      matchRepository.findLatestActiveByCourtId(courtId),
+      matchRepository.findLatestFinishedByCourtId(courtId),
+    ]);
 
     return {
       court: courtSummary,
@@ -32,6 +35,13 @@ export function createGetCourtSetupUseCase(courtRepository, matchRepository) {
             id: match.id,
             status: match.status,
             startedAt: match.startedAt,
+          }
+        : null,
+      lastFinishedMatch: lastFinishedMatch
+        ? {
+            id: lastFinishedMatch.id,
+            status: lastFinishedMatch.status,
+            finishedAt: lastFinishedMatch.finishedAt,
           }
         : null,
     };

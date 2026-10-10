@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import SensorEventModel from "./models/sensorEvent.model.js";
 
 export async function connectDatabase() {
   const {DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD, DB_NAME} = process.env;
@@ -9,5 +10,11 @@ export async function connectDatabase() {
   }
 
   await mongoose.connect(MONGODB_URI);
+  const topology = await mongoose.connection.db.admin().command({hello: 1});
+  if (!topology.setName && topology.msg !== "isdbgrid") {
+    await mongoose.disconnect();
+    throw new Error("MongoDB must run as a replica set to support atomic sensor-command processing.");
+  }
+  await SensorEventModel.createIndexes();
   console.info("Connected to MongoDB.");
 }
