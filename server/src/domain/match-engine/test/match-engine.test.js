@@ -25,9 +25,10 @@ function createMatch(overrides = {}) {
   const history = {completedSets: []};
   const format = {type: "SINGLE_SET", setsToWin: 1, gamesToWinSet: 6};
   const rules = {
-    gameScoring: "PREMIER",
-    starPoint: {enabled: true, advantagesBeforeStarPoint: 2},
-    tieBreak: {enabled: true, triggerAtGames: 6, pointsToWin: 7, winByPoints: 2},
+    scoringStrategy: "STAR_POINT",
+    advantagesBeforeStarPoint: 2,
+    setEndingStrategy: "TIE_BREAK",
+    tieBreak: {triggerAtGames: 6, pointsToWin: 7, winByPoints: 2},
     sideChange: {enabled: true, policy: "STANDARD"},
   };
 
@@ -88,13 +89,58 @@ test("awards a game after the configured two failed advantages and star point", 
 test("uses the deciding point for no-ad scoring", () => {
   const match = createMatch({
     state: {currentGame: {...createMatch().state.currentGame, points: {A: "40", B: "40"}}},
-    rules: {gameScoring: "NO_AD", starPoint: {enabled: false, advantagesBeforeStarPoint: 0}},
+    rules: {scoringStrategy: "NO_AD"},
   });
 
   const decidingPoint = command(match, "ADD_POINT", "B");
   assert.deepEqual(decidingPoint.state.currentGame.points, {A: "SP", B: "SP"});
   const wonGame = command({...match, ...decidingPoint}, "ADD_POINT", "B");
   assert.equal(wonGame.state.currentSet.games.B, 1);
+});
+
+test("keeps regular advantage scoring without converting deuce to a deciding point", () => {
+  const match = createMatch({
+    state: {currentGame: {...createMatch().state.currentGame, points: {A: "40", B: "40"}}},
+    rules: {scoringStrategy: "ADVANTAGE"},
+  });
+
+  const result = command(match, "ADD_POINT", "A");
+  assert.deepEqual(result.state.currentGame.points, {A: "AD1", B: "40"});
+});
+
+test("uses the configured threshold for star-point scoring", () => {
+  const match = createMatch({
+    state: {
+      currentGame: {
+        ...createMatch().state.currentGame,
+        points: {A: "AD1", B: "40"},
+        advantagesPlayed: 0,
+      },
+    },
+    rules: {scoringStrategy: "STAR_POINT", advantagesBeforeStarPoint: 1},
+  });
+
+  const result = command(match, "ADD_POINT", "B");
+  assert.deepEqual(result.state.currentGame.points, {A: "SP", B: "SP"});
+  assert.equal(result.state.currentGame.advantagesPlayed, 1);
+});
+
+test("moves directly from 30-40 to the no-ad deciding point at 40-40", () => {
+  const match = createMatch({
+    rules: {scoringStrategy: "NO_AD"},
+  });
+  let result = match;
+  for (const team of ["A", "B", "A", "B", "A", "B"]) {
+    result = {...result, ...command(result, "ADD_POINT", team)};
+  }
+
+  assert.deepEqual(result.state.currentGame.points, {A: "SP", B: "SP"});
+  assert.equal(result.state.currentSet.games.A, 0);
+  assert.equal(result.state.currentSet.games.B, 0);
+
+  const decidingPoint = command(result, "ADD_POINT", "B");
+  assert.deepEqual(decidingPoint.state.currentGame.points, {A: "0", B: "0"});
+  assert.equal(decidingPoint.state.currentSet.games.B, 1);
 });
 
 test("emits point, game, set, and match events when a point wins a match", () => {
@@ -115,6 +161,8 @@ test("emits point, game, set, and match events when a point wins a match", () =>
     "MATCH_WON",
   ]);
   assert.deepEqual(result.history.completedSets[0].games, {A: 6, B: 4});
+  assert.deepEqual(result.state.currentSet.games, {A: 6, B: 4});
+  assert.deepEqual(result.state.currentGame.points, {A: "40", B: "0"});
   assert.deepEqual(result.state.sideChange.currentSides, {A: "LEFT", B: "RIGHT"});
 });
 
@@ -218,12 +266,81 @@ test("closes a tie-break set only after the required lead", () => {
     tieBreakPoints: {A: 8, B: 6},
     winner: "A",
   });
+  assert.deepEqual(setWon.state.currentGame.tieBreakPoints, {A: 8, B: 6});
   assert.deepEqual(setWon.events.map(({type}) => type), [
     "POINT_WON",
     "GAME_WON",
     "SET_WON",
     "MATCH_WON",
   ]);
+});
+
+test("first-to-six sets end at a one-game lead without a tie-break", () => {
+  const match = createMatch({
+    state: {
+      currentSet: {number: 1, games: {A: 5, B: 5}},
+      currentGame: {...createMatch().state.currentGame, points: {A: "40", B: "0"}},
+    },
+    rules: {setEndingStrategy: "FIRST_TO_SIX"},
+  });
+
+  const result = command(match, "ADD_POINT", "A");
+
+  assert.equal(result.status, "FINISHED");
+  assert.deepEqual(result.history.completedSets[0].games, {A: 6, B: 5});
+  assert.equal(result.history.completedSets[0].tieBreakPoints, null);
+  assert.equal(result.state.currentGame.type, "REGULAR");
+});
+
+test("two-game-lead sets continue beyond six until the two-game margin", () => {
+  const match = createMatch({
+    state: {
+      currentSet: {number: 1, games: {A: 5, B: 5}},
+      currentGame: {...createMatch().state.currentGame, points: {A: "40", B: "0"}},
+    },
+    rules: {setEndingStrategy: "TWO_GAME_LEAD"},
+  });
+
+  const atSixToFive = command(match, "ADD_POINT", "A");
+  assert.equal(atSixToFive.status, "IN_PROGRESS");
+  assert.deepEqual(atSixToFive.state.currentSet.games, {A: 6, B: 5});
+
+  const setWon = command({...match, ...atSixToFive, state: {
+    ...atSixToFive.state,
+    currentGame: {...atSixToFive.state.currentGame, points: {A: "40", B: "0"}},
+  }}, "ADD_POINT", "A");
+  assert.equal(setWon.status, "FINISHED");
+  assert.deepEqual(setWon.history.completedSets[0].games, {A: 7, B: 5});
+});
+
+test("two-game-lead sets continue past 6-6 without starting a tie-break", () => {
+  const match = createMatch({
+    state: {
+      currentSet: {number: 1, games: {A: 6, B: 6}},
+      currentGame: {...createMatch().state.currentGame, points: {A: "40", B: "0"}},
+    },
+    rules: {setEndingStrategy: "TWO_GAME_LEAD"},
+  });
+
+  const atSevenSix = command(match, "ADD_POINT", "A");
+  assert.equal(atSevenSix.status, "IN_PROGRESS");
+  assert.equal(atSevenSix.state.currentGame.type, "REGULAR");
+  assert.deepEqual(atSevenSix.state.currentSet.games, {A: 7, B: 6});
+
+  const setWon = command(
+    {
+      ...match,
+      ...atSevenSix,
+      state: {
+        ...atSevenSix.state,
+        currentGame: {...atSevenSix.state.currentGame, points: {A: "40", B: "0"}},
+      },
+    },
+    "ADD_POINT",
+    "A",
+  );
+  assert.equal(setWon.status, "FINISHED");
+  assert.deepEqual(setWon.history.completedSets[0].games, {A: 8, B: 6});
 });
 
 test("undo restores a finished match to the exact pre-point state", () => {

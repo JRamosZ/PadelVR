@@ -4,20 +4,22 @@ const matchModes = {
     name: "Torneo",
     description: "Ideal para partidos competitivos y torneos.",
     icon: "trophy",
-    features: ["3 sets", "6 juegos por set", "Tie-break en 6-6"],
+    features: [
+      "3 sets",
+      "6 juegos por set",
+      "Ventajas y punto de oro tras 2 ventajas",
+      "Tie-break en 6-6",
+    ],
     format: {
       type: "BEST_OF_THREE",
       setsToWin: 2,
       gamesToWinSet: 6,
     },
     rules: {
-      gameScoring: "PREMIER",
-      starPoint: {
-        enabled: true,
-        advantagesBeforeStarPoint: 2,
-      },
+      scoringStrategy: "STAR_POINT",
+      advantagesBeforeStarPoint: 2,
+      setEndingStrategy: "TIE_BREAK",
       tieBreak: {
-        enabled: true,
         triggerAtGames: 6,
         pointsToWin: 7,
         winByPoints: 2,
@@ -33,20 +35,21 @@ const matchModes = {
     name: "Rápido",
     description: "Perfecto para partidos casuales o de práctica.",
     icon: "lightning",
-    features: ["1 set", "6 juegos por set", "Sin tie-break"],
+    features: [
+      "1 set",
+      "6 juegos por set",
+      "Sin ventajas (punto decisivo)",
+      "Primero en llegar a 6 juegos (sin tie-break)",
+    ],
     format: {
       type: "SINGLE_SET",
       setsToWin: 1,
       gamesToWinSet: 6,
     },
     rules: {
-      gameScoring: "NO_AD",
-      starPoint: {
-        enabled: false,
-        advantagesBeforeStarPoint: 0,
-      },
+      scoringStrategy: "NO_AD",
+      setEndingStrategy: "FIRST_TO_SIX",
       tieBreak: {
-        enabled: false,
         triggerAtGames: 6,
         pointsToWin: 7,
         winByPoints: 2,
@@ -62,20 +65,21 @@ const matchModes = {
     name: "Amistoso",
     description: "Disfruta del juego sin presión.",
     icon: "players",
-    features: ["1 set", "6 juegos por set", "Con tie-break"],
+    features: [
+      "1 set",
+      "6 juegos por set",
+      "Ventajas ilimitadas",
+      "Sin tie-break; gana con 2 juegos de diferencia",
+    ],
     format: {
       type: "SINGLE_SET",
       setsToWin: 1,
       gamesToWinSet: 6,
     },
     rules: {
-      gameScoring: "PREMIER",
-      starPoint: {
-        enabled: false,
-        advantagesBeforeStarPoint: 0,
-      },
+      scoringStrategy: "ADVANTAGE",
+      setEndingStrategy: "TWO_GAME_LEAD",
       tieBreak: {
-        enabled: true,
         triggerAtGames: 6,
         pointsToWin: 7,
         winByPoints: 2,

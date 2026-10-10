@@ -6,8 +6,8 @@ const customMode = {
   isCustomizable: true,
   features: [
     "Sets y games",
-    "Tie-break (opcional)",
-    "Ventaja / Punto de oro (opcional)",
+    "Cierre del set: tie-break, primero a 6 o diferencia de 2 juegos",
+    "Puntuación: punto decisivo, ventajas ilimitadas o punto de oro",
   ],
   format: null,
   rules: null,

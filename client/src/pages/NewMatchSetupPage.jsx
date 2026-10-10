@@ -14,9 +14,9 @@ const createPlayers = (team) => [
 const initialCustomSettings = {
   setsToWin: 2,
   gamesToWinSet: 6,
-  gameScoring: "PREMIER",
-  tieBreakEnabled: true,
-  starPointEnabled: true,
+  scoringStrategy: "STAR_POINT",
+  advantagesBeforeStarPoint: 2,
+  setEndingStrategy: "TIE_BREAK",
 };
 
 function compressPhoto(file) {
@@ -304,52 +304,61 @@ export default function NewMatchSetupPage({courtId}) {
                 </select>
               </label>
               <label className="custom-setting">
-                <span>Puntuación del juego</span>
+                <span>Estrategia de puntuación</span>
                 <select
-                  value={customSettings.gameScoring}
+                  value={customSettings.scoringStrategy}
                   onChange={(event) => {
-                    const gameScoring = event.target.value;
+                    const scoringStrategy = event.target.value;
                     setCustomSettingsCompleted(false);
                     setCustomSettings((settings) => ({
                       ...settings,
-                      gameScoring,
-                      starPointEnabled:
-                        gameScoring === "NO_AD" ? false : settings.starPointEnabled,
+                      scoringStrategy,
                     }));
                   }}
                 >
-                  <option value="PREMIER">Ventaja y punto de oro</option>
+                  <option value="ADVANTAGE">Ventaja tradicional</option>
                   <option value="NO_AD">Punto decisivo (sin ventaja)</option>
+                  <option value="STAR_POINT">Punto de oro tras ventajas</option>
                 </select>
               </label>
-              <label className="custom-setting custom-setting-toggle">
-                <span>Tie-break en 6-6</span>
-                <input
-                  type="checkbox"
-                  checked={customSettings.tieBreakEnabled}
+              {customSettings.scoringStrategy === "STAR_POINT" && (
+                <label className="custom-setting">
+                  <span>Ventajas antes del punto de oro</span>
+                  <select
+                    value={customSettings.advantagesBeforeStarPoint}
+                    onChange={(event) => {
+                      setCustomSettingsCompleted(false);
+                      setCustomSettings((settings) => ({
+                        ...settings,
+                        advantagesBeforeStarPoint: Number(event.target.value),
+                      }));
+                    }}
+                  >
+                    <option value={1}>Una ventaja</option>
+                    <option value={2}>Dos ventajas</option>
+                  </select>
+                </label>
+              )}
+              <label className="custom-setting">
+                <span>Cómo se gana el set</span>
+                <select
+                  value={customSettings.setEndingStrategy}
                   onChange={(event) => {
                     setCustomSettingsCompleted(false);
                     setCustomSettings((settings) => ({
                       ...settings,
-                      tieBreakEnabled: event.target.checked,
+                      setEndingStrategy: event.target.value,
                     }));
                   }}
-                />
-              </label>
-              <label className="custom-setting custom-setting-toggle">
-                <span>Punto de oro tras dos ventajas</span>
-                <input
-                  type="checkbox"
-                  checked={customSettings.starPointEnabled}
-                  disabled={customSettings.gameScoring === "NO_AD"}
-                  onChange={(event) => {
-                    setCustomSettingsCompleted(false);
-                    setCustomSettings((settings) => ({
-                      ...settings,
-                      starPointEnabled: event.target.checked,
-                    }));
-                  }}
-                />
+                >
+                  <option value="TIE_BREAK">Tie-break al llegar a 6-6</option>
+                  <option value="FIRST_TO_SIX">
+                    Primero en llegar a 6 juegos (sin tie-break)
+                  </option>
+                  <option value="TWO_GAME_LEAD">
+                    Sin tie-break; gana con 2 juegos de diferencia
+                  </option>
+                </select>
               </label>
               <button className="match-setup-next" type="button" onClick={goToNextStage}>
                 Siguiente <span aria-hidden="true">→</span>
@@ -408,12 +417,18 @@ export default function NewMatchSetupPage({courtId}) {
                       ? [
                           customSettings.setsToWin === 1 ? "Un set" : "Mejor de tres sets",
                           "6 games por set",
-                          customSettings.gameScoring === "NO_AD"
+                          customSettings.scoringStrategy === "NO_AD"
                             ? "Punto decisivo sin ventaja"
-                            : customSettings.starPointEnabled
-                              ? "Punto de oro tras dos ventajas"
-                              : "Ventaja tradicional",
-                          customSettings.tieBreakEnabled ? "Tie-break en 6-6" : "Sin tie-break",
+                            : customSettings.scoringStrategy === "ADVANTAGE"
+                              ? "Ventaja tradicional"
+                              : `Punto de oro tras ${customSettings.advantagesBeforeStarPoint} ${
+                                  customSettings.advantagesBeforeStarPoint === 1 ? "ventaja" : "ventajas"
+                                }`,
+                          customSettings.setEndingStrategy === "TIE_BREAK"
+                            ? "Tie-break al llegar a 6-6"
+                            : customSettings.setEndingStrategy === "FIRST_TO_SIX"
+                              ? "Primero en llegar a 6 juegos (sin tie-break)"
+                              : "Sin tie-break; gana con 2 juegos de diferencia",
                         ]
                       : selectedMode?.features || []
                     ).map((feature) => <li key={feature}>{feature}</li>)}

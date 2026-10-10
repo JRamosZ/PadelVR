@@ -13,9 +13,9 @@ const initialMatch = () => ({
   startedAt: null,
   format: {type: "SINGLE_SET", setsToWin: 1, gamesToWinSet: 6},
   rules: {
-    gameScoring: "PREMIER",
-    starPoint: {enabled: false, advantagesBeforeStarPoint: 0},
-    tieBreak: {enabled: false, triggerAtGames: 6, pointsToWin: 7, winByPoints: 2},
+    scoringStrategy: "ADVANTAGE",
+    setEndingStrategy: "TWO_GAME_LEAD",
+    tieBreak: {triggerAtGames: 6, pointsToWin: 7, winByPoints: 2},
   },
   state: {
     setsWon: {A: 0, B: 0},

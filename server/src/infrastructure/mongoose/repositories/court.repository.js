@@ -50,6 +50,17 @@ export function createCourtRepository() {
       }));
     },
 
+    async findByIdWithSensors(courtId) {
+      const court = await CourtModel.findById(courtId)
+        .select("_id sensorModules")
+        .lean();
+      if (!court) return null;
+      return {
+        id: court._id.toString(),
+        sensorModules: court.sensorModules.map(({sensorId, side}) => ({sensorId, side})),
+      };
+    },
+
     async existsById(courtId) {
       return Boolean(await CourtModel.exists({_id: courtId}));
     },

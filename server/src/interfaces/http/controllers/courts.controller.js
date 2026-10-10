@@ -2,6 +2,7 @@ export function createCourtsController({
   getCourtById,
   getLatestMatchForCourt,
   getCourtSetup,
+  getMatchForScoreboard,
   createMatch,
   listCourts,
 }) {
@@ -26,6 +27,18 @@ export function createCourtsController({
     getLatestMatch: async (request, response, next) => {
       try {
         const result = await getLatestMatchForCourt(request.params.courtId);
+        response.json(result);
+      } catch (error) {
+        next(error);
+      }
+    },
+
+    getMatchForScoreboard: async (request, response, next) => {
+      try {
+        const result = await getMatchForScoreboard(
+          request.params.courtId,
+          request.params.matchId,
+        );
         response.json(result);
       } catch (error) {
         next(error);

@@ -10,15 +10,19 @@ function buildCustomMode(settings) {
     !settings ||
     ![1, 2].includes(settings.setsToWin) ||
     settings.gamesToWinSet !== 6 ||
-    !["PREMIER", "NO_AD"].includes(settings.gameScoring) ||
-    typeof settings.tieBreakEnabled !== "boolean" ||
-    typeof settings.starPointEnabled !== "boolean"
+    !["ADVANTAGE", "NO_AD", "STAR_POINT"].includes(settings.scoringStrategy) ||
+    !["TIE_BREAK", "FIRST_TO_SIX", "TWO_GAME_LEAD"].includes(
+      settings.setEndingStrategy,
+    )
   ) {
     throw new ApplicationError("Invalid custom match settings.", 400);
   }
 
-  if (settings.gameScoring === "NO_AD" && settings.starPointEnabled) {
-    throw new ApplicationError("Star point cannot be enabled with no-ad scoring.", 400);
+  if (
+    settings.scoringStrategy === "STAR_POINT" &&
+    ![1, 2].includes(settings.advantagesBeforeStarPoint)
+  ) {
+    throw new ApplicationError("Invalid star-point advantage threshold.", 400);
   }
 
   return {
@@ -28,13 +32,12 @@ function buildCustomMode(settings) {
       gamesToWinSet: settings.gamesToWinSet,
     },
     rules: {
-      gameScoring: settings.gameScoring,
-      starPoint: {
-        enabled: settings.starPointEnabled,
-        advantagesBeforeStarPoint: settings.starPointEnabled ? 2 : 0,
-      },
+      scoringStrategy: settings.scoringStrategy,
+      ...(settings.scoringStrategy === "STAR_POINT"
+        ? {advantagesBeforeStarPoint: settings.advantagesBeforeStarPoint}
+        : {}),
+      setEndingStrategy: settings.setEndingStrategy,
       tieBreak: {
-        enabled: settings.tieBreakEnabled,
         triggerAtGames: 6,
         pointsToWin: 7,
         winByPoints: 2,

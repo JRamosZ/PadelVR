@@ -2,6 +2,17 @@ import MatchModel from "../models/match.model.js";
 
 export function createMatchRepository() {
   return {
+    async findByIdAndCourtId(matchId, courtId) {
+      const match = await MatchModel.findOne({_id: matchId, courtId})
+        .select("_id status format rules teams state history revision startedAt finishedAt")
+        .lean();
+      if (!match) return null;
+      return {
+        ...match,
+        id: match._id.toString(),
+      };
+    },
+
     async findLatestByCourtId(courtId, session) {
       let query = MatchModel.findOne({courtId})
         .sort({createdAt: -1, _id: -1})

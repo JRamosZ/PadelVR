@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import matchModes from "../../../config/matchModes.js";
 import {createGetMatchModesUseCase} from "../get-match-modes.use-case.js";
 
 test("returns predefined match modes and a customizable mode", async () => {
@@ -8,19 +9,19 @@ test("returns predefined match modes and a customizable mode", async () => {
       id: "TRADITIONAL",
       name: "Torneo",
       format: {setsToWin: 2},
-      rules: {tieBreak: {enabled: true}},
+      rules: {setEndingStrategy: "TIE_BREAK"},
     },
     QUICK: {
       id: "QUICK",
       name: "Rápido",
       format: {setsToWin: 1},
-      rules: {tieBreak: {enabled: false}},
+      rules: {setEndingStrategy: "FIRST_TO_SIX"},
     },
     FRIENDLY: {
       id: "FRIENDLY",
       name: "Amistoso",
       format: {setsToWin: 1},
-      rules: {tieBreak: {enabled: true}},
+      rules: {setEndingStrategy: "TWO_GAME_LEAD"},
     },
   };
   const getMatchModes = createGetMatchModesUseCase(predefinedModes);
@@ -35,4 +36,22 @@ test("returns predefined match modes and a customizable mode", async () => {
   assert.equal(modes[3].isCustomizable, true);
   assert.equal(modes[3].format, null);
   assert.equal(modes[3].rules, null);
+});
+
+test("includes a readable scoring strategy in each selectable mode", async () => {
+  const getMatchModes = createGetMatchModesUseCase(matchModes);
+  const modes = await getMatchModes();
+
+  assert.ok(modes[0].features.includes("Ventajas y punto de oro tras 2 ventajas"));
+  assert.ok(modes[0].features.includes("Tie-break en 6-6"));
+  assert.ok(modes[1].features.includes("Primero en llegar a 6 juegos (sin tie-break)"));
+  assert.ok(modes[2].features.includes("Sin tie-break; gana con 2 juegos de diferencia"));
+  assert.equal(modes[0].rules.setEndingStrategy, "TIE_BREAK");
+  assert.equal(modes[1].rules.setEndingStrategy, "FIRST_TO_SIX");
+  assert.equal(modes[2].rules.setEndingStrategy, "TWO_GAME_LEAD");
+  assert.ok(
+    modes[3].features.some((feature) =>
+      feature.includes("punto decisivo, ventajas ilimitadas o punto de oro"),
+    ),
+  );
 });

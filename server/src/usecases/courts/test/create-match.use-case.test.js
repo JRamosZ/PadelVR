@@ -45,9 +45,10 @@ function createDependencies({courtStatus = "AVAILABLE", latestMatch = null} = {}
       TRADITIONAL: {
         format: {type: "BEST_OF_THREE", setsToWin: 2, gamesToWinSet: 6},
         rules: {
-          gameScoring: "PREMIER",
-          starPoint: {enabled: true, advantagesBeforeStarPoint: 2},
-          tieBreak: {enabled: true, triggerAtGames: 6, pointsToWin: 7, winByPoints: 2},
+          scoringStrategy: "STAR_POINT",
+          advantagesBeforeStarPoint: 2,
+          setEndingStrategy: "TIE_BREAK",
+          tieBreak: {triggerAtGames: 6, pointsToWin: 7, winByPoints: 2},
           sideChange: {enabled: true, policy: "STANDARD"},
         },
       },
@@ -77,9 +78,8 @@ test("uses validated custom settings for the match configuration", async () => {
     customSettings: {
       setsToWin: 1,
       gamesToWinSet: 6,
-      gameScoring: "NO_AD",
-      tieBreakEnabled: true,
-      starPointEnabled: false,
+      scoringStrategy: "NO_AD",
+      setEndingStrategy: "FIRST_TO_SIX",
     },
     teams,
   });
@@ -89,7 +89,32 @@ test("uses validated custom settings for the match configuration", async () => {
     setsToWin: 1,
     gamesToWinSet: 6,
   });
-  assert.equal(getSavedMatch().rules.gameScoring, "NO_AD");
+  assert.equal(getSavedMatch().rules.scoringStrategy, "NO_AD");
+  assert.equal("advantagesBeforeStarPoint" in getSavedMatch().rules, false);
+  assert.equal(getSavedMatch().rules.setEndingStrategy, "FIRST_TO_SIX");
+});
+
+test("requires an advantage threshold only for star-point scoring", async () => {
+  const {useCase} = createDependencies();
+  const customSettings = {
+    setsToWin: 1,
+    gamesToWinSet: 6,
+    scoringStrategy: "STAR_POINT",
+    setEndingStrategy: "TIE_BREAK",
+  };
+
+  await assert.rejects(
+    useCase(courtId, {modeId: "CUSTOM", customSettings, teams}),
+    (error) => error instanceof ApplicationError && error.statusCode === 400,
+  );
+
+  const {useCase: validUseCase, getSavedMatch} = createDependencies();
+  await validUseCase(courtId, {
+    modeId: "CUSTOM",
+    customSettings: {...customSettings, advantagesBeforeStarPoint: 1},
+    teams,
+  });
+  assert.equal(getSavedMatch().rules.advantagesBeforeStarPoint, 1);
 });
 
 test("does not create a match if the court is unavailable", async () => {

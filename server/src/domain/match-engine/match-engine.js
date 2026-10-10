@@ -59,26 +59,26 @@ function validateInput({status, state, format, rules, command}) {
   if (!state.currentGame || !state.currentSet || !state.setsWon || !state.server) {
     throw new MatchEngineError("The match state is incomplete.");
   }
-  if (!rules.tieBreak || typeof rules.tieBreak.enabled !== "boolean") {
-    throw new MatchEngineError("The tie-break configuration is incomplete.");
+  if (!["TIE_BREAK", "FIRST_TO_SIX", "TWO_GAME_LEAD"].includes(rules.setEndingStrategy)) {
+    throw new MatchEngineError("Unsupported set-ending strategy.");
   }
-  if (!["PREMIER", "NO_AD"].includes(rules.gameScoring)) {
-    throw new MatchEngineError("Unsupported game scoring rule.");
+  if (!["ADVANTAGE", "NO_AD", "STAR_POINT"].includes(rules.scoringStrategy)) {
+    throw new MatchEngineError("Unsupported scoring strategy.");
   }
   if (![1, 2].includes(format.setsToWin) || !Number.isInteger(format.gamesToWinSet)) {
     throw new MatchEngineError("The match format is invalid.");
   }
   if (
-    rules.tieBreak?.enabled &&
-    (!Number.isInteger(rules.tieBreak.triggerAtGames) ||
-      !Number.isInteger(rules.tieBreak.pointsToWin) ||
-      !Number.isInteger(rules.tieBreak.winByPoints))
+    rules.setEndingStrategy === "TIE_BREAK" &&
+    (!Number.isInteger(rules.tieBreak?.triggerAtGames) ||
+      !Number.isInteger(rules.tieBreak?.pointsToWin) ||
+      !Number.isInteger(rules.tieBreak?.winByPoints))
   ) {
     throw new MatchEngineError("The tie-break configuration is invalid.");
   }
   if (
-    rules.starPoint?.enabled &&
-    !Number.isInteger(rules.starPoint.advantagesBeforeStarPoint)
+    rules.scoringStrategy === "STAR_POINT" &&
+    ![1, 2].includes(rules.advantagesBeforeStarPoint)
   ) {
     throw new MatchEngineError("The star-point configuration is invalid.");
   }
@@ -117,7 +117,7 @@ function validateInput({status, state, format, rules, command}) {
   }
   if (
     state.currentGame.type === "TIEBREAK" &&
-    (!rules.tieBreak.enabled ||
+    (rules.setEndingStrategy !== "TIE_BREAK" ||
       !["A-1", "A-2", "B-1", "B-2"].includes(state.currentGame.tieBreakFirstServer) ||
       TEAMS.some(
         (team) =>
@@ -160,9 +160,10 @@ function currentSideScore(state) {
   return clone(state.currentSet.games);
 }
 
-function hasSetWinner(games, target) {
+function hasSetWinner(games, target, strategy) {
   const difference = games.A - games.B;
-  return (games.A >= target || games.B >= target) && Math.abs(difference) >= 2
+  const requiredLead = strategy === "FIRST_TO_SIX" ? 1 : 2;
+  return (games.A >= target || games.B >= target) && Math.abs(difference) >= requiredLead
     ? difference > 0 ? "A" : "B"
     : null;
 }
@@ -216,7 +217,7 @@ function closeGame(state, history, format, rules, events, gameWinner, tieBreakPo
     });
 
     const tieBreakStarts =
-      rules.tieBreak.enabled &&
+      rules.setEndingStrategy === "TIE_BREAK" &&
       state.currentSet.games.A === rules.tieBreak.triggerAtGames &&
       state.currentSet.games.B === rules.tieBreak.triggerAtGames;
 
@@ -232,7 +233,11 @@ function closeGame(state, history, format, rules, events, gameWinner, tieBreakPo
       return "IN_PROGRESS";
     }
 
-    const setWinner = hasSetWinner(state.currentSet.games, format.gamesToWinSet);
+    const setWinner = hasSetWinner(
+      state.currentSet.games,
+      format.gamesToWinSet,
+      rules.setEndingStrategy,
+    );
     if (!setWinner) {
       state.currentGame = {
         type: "REGULAR",
@@ -324,10 +329,10 @@ function awardRegularPoint(state, team, rules) {
   if (otherScore === "AD1" || otherScore === "AD2") {
     const advantagesPlayed = (state.currentGame.advantagesPlayed ?? 0) + 1;
     state.currentGame.advantagesPlayed = advantagesPlayed;
-    const maxAdvantages = rules.starPoint?.enabled
-      ? rules.starPoint.advantagesBeforeStarPoint
-      : null;
-    if (maxAdvantages !== null && advantagesPlayed >= maxAdvantages) {
+    if (
+      rules.scoringStrategy === "STAR_POINT" &&
+      advantagesPlayed >= rules.advantagesBeforeStarPoint
+    ) {
       points.A = "SP";
       points.B = "SP";
     } else {
@@ -337,12 +342,11 @@ function awardRegularPoint(state, team, rules) {
     return false;
   }
   if (scored === "40" && otherScore === "40") {
-    const starPointReady =
-      rules.gameScoring === "NO_AD" ||
-      (rules.starPoint?.enabled &&
-        (state.currentGame.advantagesPlayed ?? 0) >=
-          rules.starPoint.advantagesBeforeStarPoint);
-    if (starPointReady) {
+    const decidingPointReady =
+      rules.scoringStrategy === "NO_AD" ||
+      (rules.scoringStrategy === "STAR_POINT" &&
+        (state.currentGame.advantagesPlayed ?? 0) >= rules.advantagesBeforeStarPoint);
+    if (decidingPointReady) {
       points.A = "SP";
       points.B = "SP";
     } else {
@@ -359,6 +363,14 @@ function awardRegularPoint(state, team, rules) {
     return true;
   }
   points[team] = POINTS[pointValue + 1];
+  if (
+    rules.scoringStrategy === "NO_AD" &&
+    points.A === "40" &&
+    points.B === "40"
+  ) {
+    points.A = "SP";
+    points.B = "SP";
+  }
   return false;
 }
 

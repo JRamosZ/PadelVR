@@ -76,33 +76,32 @@ const formatSchema = new Schema(
 
 const rulesSchema = new Schema(
   {
-    gameScoring: {
+    scoringStrategy: {
       type: String,
-      enum: ["PREMIER", "NO_AD"],
-      default: "PREMIER",
+      enum: ["ADVANTAGE", "NO_AD", "STAR_POINT"],
+      default: "STAR_POINT",
       required: true,
     },
 
-    starPoint: {
-      enabled: {
-        type: Boolean,
-        default: true,
-        required: true,
+    advantagesBeforeStarPoint: {
+      type: Number,
+      enum: [1, 2],
+      default() {
+        return this.scoringStrategy === "STAR_POINT" ? 2 : undefined;
       },
-      advantagesBeforeStarPoint: {
-        type: Number,
-        enum: [0, 1, 2],
-        default: 2,
-        required: true,
+      required() {
+        return this.scoringStrategy === "STAR_POINT";
       },
     },
 
+    setEndingStrategy: {
+      type: String,
+      enum: ["TIE_BREAK", "FIRST_TO_SIX", "TWO_GAME_LEAD"],
+      default: "TIE_BREAK",
+      required: true,
+    },
+
     tieBreak: {
-      enabled: {
-        type: Boolean,
-        default: true,
-        required: true,
-      },
       triggerAtGames: {
         type: Number,
         enum: [6],
@@ -398,6 +397,33 @@ const matchSchema = new Schema(
   },
   {timestamps: true},
 );
+
+matchSchema.pre("init", function migrateLegacyScoringRules(document) {
+  const rules = document.rules;
+  if (!rules) return;
+
+  if (!rules.scoringStrategy && rules.gameScoring) {
+    if (
+      rules.gameScoring === "NO_AD" ||
+      (rules.starPoint?.enabled && rules.starPoint.advantagesBeforeStarPoint === 0)
+    ) {
+      rules.scoringStrategy = "NO_AD";
+    } else if (rules.starPoint?.enabled) {
+      rules.scoringStrategy = "STAR_POINT";
+      rules.advantagesBeforeStarPoint = rules.starPoint.advantagesBeforeStarPoint;
+    } else {
+      rules.scoringStrategy = "ADVANTAGE";
+    }
+
+    delete rules.gameScoring;
+    delete rules.starPoint;
+  }
+
+  if (!rules.setEndingStrategy && rules.tieBreak) {
+    rules.setEndingStrategy = rules.tieBreak.enabled ? "TIE_BREAK" : "TWO_GAME_LEAD";
+    delete rules.tieBreak.enabled;
+  }
+});
 
 const Match = model("Match", matchSchema);
 

@@ -35,9 +35,17 @@ function ModeIcon({type}) {
   );
 }
 
-function FeatureIcon({index, customizable}) {
-  if (index === 2 && !customizable) {
+function FeatureIcon({index, customizable, feature}) {
+  if (index === 2 && feature.includes("Punto de oro")) {
     return <span className="mode-feature-icon mode-feature-star">★</span>;
+  }
+
+  if (index === 2 && feature.startsWith("Sin ventajas")) {
+    return <span className="mode-feature-icon mode-feature-ban">⊘</span>;
+  }
+
+  if (index === 2 && feature.startsWith("Ventajas ilimitadas")) {
+    return <span className="mode-feature-icon mode-feature-star">∞</span>;
   }
 
   if (customizable && index === 1) {
@@ -45,7 +53,7 @@ function FeatureIcon({index, customizable}) {
   }
 
   if (customizable && index === 2) {
-    return <span className="mode-feature-icon mode-feature-ban">⊘</span>;
+    return <span className="mode-feature-icon mode-feature-outline">↔</span>;
   }
 
   return (
@@ -81,7 +89,7 @@ export default function MatchModeCard({mode, selected, onSelect}) {
       <span className="mode-card-features">
         {mode.features.map((feature, index) => (
           <span className="mode-card-feature" key={feature}>
-            <FeatureIcon index={index} customizable={mode.isCustomizable} />
+            <FeatureIcon index={index} customizable={mode.isCustomizable} feature={feature} />
             <span>{feature}</span>
           </span>
         ))}

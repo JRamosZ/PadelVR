@@ -126,6 +126,8 @@ La transición del marcador, los documentos `MatchEvent` y el `SensorEvent` se g
 
 La pantalla puede suscribirse a `ws://<servidor>:<puerto>/ws?matchId=<id>`. Recibirá un mensaje `match.subscribed` al conectarse y mensajes `match.updated` con el estado, la revisión y los eventos de cada transición. Cada actualización se envía únicamente a clientes suscritos a ese partido.
 
+Después de crear un partido desde el formulario, la aplicación abre la pantalla del marcador y se conecta a ese WebSocket. El marcador incluye botones de simulación por equipo para agregar un punto o deshacer la última acción; estos envían comandos al mismo endpoint de sensores y muestran los cambios recibidos en vivo.
+
 ---
 
 # 🎾 Detección del punto

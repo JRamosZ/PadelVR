@@ -20,6 +20,7 @@ import {createSensorCommandsRouter} from "./routes/sensor-commands.js";
 import {createGetCourtByIdUseCase} from "./usecases/courts/get-court-by-id.use-case.js";
 import {createGetCourtSetupUseCase} from "./usecases/courts/get-court-setup.use-case.js";
 import {createGetLatestMatchForCourtUseCase} from "./usecases/courts/get-latest-match-for-court.use-case.js";
+import {createGetMatchForScoreboardUseCase} from "./usecases/courts/get-match-for-scoreboard.use-case.js";
 import {createSeedInitialCourtUseCase} from "./usecases/courts/seed-initial-court.use-case.js";
 import {createCreateMatchUseCase} from "./usecases/courts/create-match.use-case.js";
 import {createListCourtsUseCase} from "./usecases/courts/list-courts.use-case.js";
@@ -39,6 +40,10 @@ export function createApplication() {
 
   const getCourtById = createGetCourtByIdUseCase(courtRepository);
   const getLatestMatchForCourt = createGetLatestMatchForCourtUseCase(courtRepository, matchRepository);
+  const getMatchForScoreboard = createGetMatchForScoreboardUseCase({
+    courtRepository,
+    matchRepository,
+  });
   const getCourtSetup = createGetCourtSetupUseCase(courtRepository, matchRepository);
   const getSystemHealth = createGetSystemHealthUseCase(healthRepository);
   const seedInitialCourt = createSeedInitialCourtUseCase(courtRepository);
@@ -58,6 +63,7 @@ export function createApplication() {
     getCourtById,
     getLatestMatchForCourt,
     getCourtSetup,
+    getMatchForScoreboard,
     createMatch,
     listCourts,
   });
