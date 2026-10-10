@@ -150,6 +150,43 @@ const teamScoreSchema = new Schema(
   {_id: false},
 );
 
+const pointOpportunitySchema = new Schema(
+  {
+    played: {
+      type: teamScoreSchema,
+      default: () => ({}),
+      required: true,
+    },
+    won: {
+      type: teamScoreSchema,
+      default: () => ({}),
+      required: true,
+    },
+  },
+  {_id: false},
+);
+
+const statisticsSchema = new Schema(
+  {
+    pointsWon: {
+      type: teamScoreSchema,
+      default: () => ({}),
+      required: true,
+    },
+    breakPoints: {
+      type: pointOpportunitySchema,
+      default: () => ({}),
+      required: true,
+    },
+    starPoints: {
+      type: pointOpportunitySchema,
+      default: () => ({}),
+      required: true,
+    },
+  },
+  {_id: false},
+);
+
 const gamePointSchema = new Schema(
   {
     A: {
@@ -275,6 +312,12 @@ const matchStateSchema = new Schema(
 
     currentGame: {
       type: currentGameSchema,
+      required: true,
+    },
+
+    statistics: {
+      type: statisticsSchema,
+      default: () => ({}),
       required: true,
     },
 

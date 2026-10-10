@@ -2,6 +2,7 @@ import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {recordSensorCommand, getMatchForScoreboard} from "../services/courtsApi.js";
 import {getScoreboardHighlights} from "./scoreboard-highlights.js";
 import {getPointScore} from "./scoreboard-score.js";
+import MatchSummary from "./MatchSummary.jsx";
 import "./ScoreboardPage.css";
 
 function getPlayerNames(team) {
@@ -219,6 +220,10 @@ export default function ScoreboardPage({courtId, matchId}) {
           </div>
         </div>
 
+        {match.status === "FINISHED" ? (
+          <MatchSummary match={match} />
+        ) : (
+          <>
         {courtChangeAlert && (
           <div className="scoreboard-court-change" role="status" aria-live="polite">
             <strong>CAMBIO DE CANCHA</strong>
@@ -378,6 +383,8 @@ export default function ScoreboardPage({courtId, matchId}) {
             <p className="scoreboard-no-events">Los eventos del partido aparecerán aquí.</p>
           )}
         </section>
+          </>
+        )}
       </section>
     </main>
   );

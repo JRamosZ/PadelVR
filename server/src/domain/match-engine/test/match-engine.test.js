@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {MatchEngineError, transitionMatch} from "../match-engine.js";
+import {getMatchStatistics, MatchEngineError, transitionMatch} from "../match-engine.js";
 
 function createMatch(overrides = {}) {
   const state = {
@@ -123,6 +123,129 @@ test("uses the configured threshold for star-point scoring", () => {
   const result = command(match, "ADD_POINT", "B");
   assert.deepEqual(result.state.currentGame.points, {A: "SP", B: "SP"});
   assert.equal(result.state.currentGame.advantagesPlayed, 1);
+});
+
+test("records points won and break points only for the receiving team", () => {
+  const match = createMatch({
+    state: {
+      server: {team: "A", playerId: "A-1"},
+      currentGame: {...createMatch().state.currentGame, points: {A: "0", B: "40"}},
+      statistics: {
+        pointsWon: {A: 0, B: 0},
+        breakPoints: {played: {A: 0, B: 0}, won: {A: 0, B: 0}},
+        starPoints: {played: {A: 0, B: 0}, won: {A: 0, B: 0}},
+      },
+    },
+  });
+
+  const receiverWins = command(match, "ADD_POINT", "B");
+
+  assert.deepEqual(receiverWins.state.statistics, {
+    pointsWon: {A: 0, B: 1},
+    breakPoints: {played: {A: 0, B: 1}, won: {A: 0, B: 1}},
+    starPoints: {played: {A: 0, B: 0}, won: {A: 0, B: 0}},
+  });
+
+  const undone = command({...match, ...receiverWins}, "UNDO_POINT");
+  assert.deepEqual(undone.state.statistics, match.state.statistics);
+});
+
+test("reconstructs statistics for saved matches that predate statistics tracking", () => {
+  const statistics = getMatchStatistics({
+    undoHistory: [
+      {
+        pointTeam: "B",
+        before: {
+          state: {
+            server: {team: "A"},
+            currentGame: {type: "REGULAR", points: {A: "0", B: "40"}},
+          },
+        },
+      },
+    ],
+  });
+
+  assert.deepEqual(statistics, {
+    pointsWon: {A: 0, B: 1},
+    breakPoints: {played: {A: 0, B: 1}, won: {A: 0, B: 1}},
+    starPoints: {played: {A: 0, B: 0}, won: {A: 0, B: 0}},
+  });
+});
+
+test("records star points played by both teams and the winner", () => {
+  const match = createMatch({
+    state: {
+      server: {team: "A", playerId: "A-1"},
+      currentGame: {...createMatch().state.currentGame, points: {A: "SP", B: "SP"}},
+    },
+  });
+
+  const result = command(match, "ADD_POINT", "B");
+
+  assert.deepEqual(result.state.statistics, {
+    pointsWon: {A: 0, B: 1},
+    breakPoints: {played: {A: 0, B: 1}, won: {A: 0, B: 1}},
+    starPoints: {played: {A: 1, B: 1}, won: {A: 0, B: 1}},
+  });
+});
+
+test("counts a no-ad deciding point as a played star point for both teams", () => {
+  const match = createMatch({
+    rules: {scoringStrategy: "NO_AD"},
+    state: {
+      server: {team: "A", playerId: "A-1"},
+      currentGame: {...createMatch().state.currentGame, points: {A: "SP", B: "SP"}},
+    },
+  });
+
+  const result = command(match, "ADD_POINT", "A");
+
+  assert.deepEqual(result.state.statistics, {
+    pointsWon: {A: 1, B: 0},
+    breakPoints: {played: {A: 0, B: 1}, won: {A: 0, B: 0}},
+    starPoints: {
+      played: {A: 1, B: 1},
+      won: {A: 1, B: 0},
+    },
+  });
+});
+
+test("counts a no-ad point as both a break point and a star point for the receiver", () => {
+  const match = createMatch({
+    rules: {scoringStrategy: "NO_AD"},
+    state: {
+      server: {team: "A", playerId: "A-1"},
+      currentGame: {...createMatch().state.currentGame, points: {A: "SP", B: "SP"}},
+    },
+  });
+
+  const result = command(match, "ADD_POINT", "B");
+
+  assert.deepEqual(result.state.statistics, {
+    pointsWon: {A: 0, B: 1},
+    breakPoints: {played: {A: 0, B: 1}, won: {A: 0, B: 1}},
+    starPoints: {
+      played: {A: 1, B: 1},
+      won: {A: 0, B: 1},
+    },
+  });
+});
+
+test("does not count an ordinary deuce point as a star point", () => {
+  const match = createMatch({
+    rules: {scoringStrategy: "ADVANTAGE"},
+    state: {
+      server: {team: "A", playerId: "A-1"},
+      currentGame: {...createMatch().state.currentGame, points: {A: "40", B: "40"}},
+    },
+  });
+
+  const result = command(match, "ADD_POINT", "A");
+
+  assert.deepEqual(result.state.statistics.starPoints, {
+    played: {A: 0, B: 0},
+    won: {A: 0, B: 0},
+  });
 });
 
 test("moves directly from 30-40 to the no-ad deciding point at 40-40", () => {

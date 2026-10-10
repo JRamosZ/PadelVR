@@ -19,6 +19,66 @@ function opposite(team) {
   return team === "A" ? "B" : "A";
 }
 
+function createEmptyStatistics() {
+  return {
+    pointsWon: {A: 0, B: 0},
+    breakPoints: {played: {A: 0, B: 0}, won: {A: 0, B: 0}},
+    starPoints: {played: {A: 0, B: 0}, won: {A: 0, B: 0}},
+  };
+}
+
+function canWinRegularGameOnNextPoint(state, team) {
+  const other = opposite(team);
+  const points = state.currentGame.points;
+  if (points[team] === "SP" || points[team] === "AD1" || points[team] === "AD2") {
+    return true;
+  }
+  if (points[other] === "SP" || points[other] === "AD1" || points[other] === "AD2") {
+    return false;
+  }
+  return points[team] === "40" && points[other] !== "40";
+}
+
+function recordPointStatistics(state, team) {
+  const statistics = state.statistics;
+  statistics.pointsWon[team] += 1;
+
+  if (state.currentGame.type !== "REGULAR") return;
+
+  const receivingTeam = opposite(state.server.team);
+  if (canWinRegularGameOnNextPoint(state, receivingTeam)) {
+    statistics.breakPoints.played[receivingTeam] += 1;
+    if (team === receivingTeam) {
+      statistics.breakPoints.won[receivingTeam] += 1;
+    }
+  }
+
+  if (
+    state.currentGame.points.A === "SP" &&
+    state.currentGame.points.B === "SP"
+  ) {
+    for (const side of TEAMS) {
+      statistics.starPoints.played[side] += 1;
+    }
+    statistics.starPoints.won[team] += 1;
+  }
+}
+
+export function getMatchStatistics(state) {
+  if (state.statistics) return state.statistics;
+
+  const statistics = createEmptyStatistics();
+  for (const transition of state.undoHistory ?? []) {
+    const previousState = transition.before?.state;
+    if (!previousState || !TEAMS.includes(transition.pointTeam)) continue;
+    recordPointStatistics(
+      {...previousState, statistics},
+      transition.pointTeam,
+    );
+  }
+  return statistics;
+}
+
 function teamForPlayer(playerId) {
   return playerId?.startsWith("A-") ? "A" : playerId?.startsWith("B-") ? "B" : null;
 }
@@ -386,6 +446,7 @@ function addPoint({status, state, history, format, rules, team}) {
   const nextHistory = clone(history);
   nextState.undoHistory = [...(state.undoHistory ?? [])];
   nextState.serviceOrder = normalizeServiceOrder(nextState);
+  recordPointStatistics(nextState, team);
 
   events.push({type: "POINT_WON", team});
   let finishedGame = false;
@@ -492,6 +553,7 @@ export function transitionMatch({status, state, history = {completedSets: []}, f
 
   const normalizedState = clone(state);
   normalizedState.undoHistory ??= [];
+  normalizedState.statistics ??= getMatchStatistics(normalizedState);
   normalizedState.serviceOrder = normalizeServiceOrder(normalizedState);
   normalizedState.currentGame.advantagesPlayed ??= 0;
 

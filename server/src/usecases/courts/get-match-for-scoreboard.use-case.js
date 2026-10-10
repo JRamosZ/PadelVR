@@ -1,4 +1,5 @@
 import {ApplicationError} from "../../domain/errors/application.error.js";
+import {getMatchStatistics} from "../../domain/match-engine/match-engine.js";
 import {isMongoObjectId} from "../../domain/validation/is-mongo-object-id.js";
 
 export function createGetMatchForScoreboardUseCase({courtRepository, matchRepository}) {
@@ -15,6 +16,10 @@ export function createGetMatchForScoreboardUseCase({courtRepository, matchReposi
     if (!court) {
       throw new ApplicationError("Court not found.", 404);
     }
+    const state = {
+      ...match.state,
+      statistics: getMatchStatistics(match.state),
+    };
 
     return {
       match: {
@@ -23,7 +28,7 @@ export function createGetMatchForScoreboardUseCase({courtRepository, matchReposi
         format: match.format,
         rules: match.rules,
         teams: match.teams,
-        state: match.state,
+        state,
         history: match.history,
         revision: match.revision,
         startedAt: match.startedAt,

@@ -10,7 +10,14 @@ test("returns match state and configured sensors for the scoreboard", async () =
     id: matchId,
     status: "READY",
     teams: [{id: "A"}, {id: "B"}],
-    state: {currentGame: {points: {A: "0", B: "0"}}},
+    state: {
+      currentGame: {points: {A: "0", B: "0"}},
+      statistics: {
+        pointsWon: {A: 0, B: 0},
+        breakPoints: {played: {A: 0, B: 0}, won: {A: 0, B: 0}},
+        starPoints: {played: {A: 0, B: 0}, won: {A: 0, B: 0}},
+      },
+    },
     format: {},
     rules: {},
     history: {completedSets: []},

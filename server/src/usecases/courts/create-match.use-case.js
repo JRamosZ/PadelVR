@@ -176,6 +176,17 @@ export function createCreateMatchUseCase({courtRepository, matchRepository, matc
           advantagesPlayed: 0,
           tieBreakFirstServer: null,
         },
+        statistics: {
+          pointsWon: {A: 0, B: 0},
+          breakPoints: {
+            played: {A: 0, B: 0},
+            won: {A: 0, B: 0},
+          },
+          starPoints: {
+            played: {A: 0, B: 0},
+            won: {A: 0, B: 0},
+          },
+        },
         server: {
           team: "A",
           playerId: "A-1",
