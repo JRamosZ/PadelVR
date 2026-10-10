@@ -9,8 +9,7 @@ export default function CourtSetupPage({courtId}) {
   const result = useCourtSetup(courtId);
   const [notice, setNotice] = useState("");
   const isReady = result.status === "ready";
-  const hasActiveMatch =
-    isReady && ["ACTIVE", "READY", "IN_PROGRESS", "PAUSED"].includes(result.match?.status);
+  const hasActiveMatch = isReady && Boolean(result.match);
 
   return (
     <main className="setup-page">
@@ -58,22 +57,6 @@ export default function CourtSetupPage({courtId}) {
           <>
             <div className="setup-cards">
               <MatchOptionCard
-                variant="current"
-                title="Ver partido actual"
-                description={
-                  hasActiveMatch
-                    ? "Consulta el marcador y el estado del partido actual."
-                    : "No hay un partido activo en esta cancha."
-                }
-                descriptionId="current-match-description"
-                disabled={!hasActiveMatch}
-                onClick={() =>
-                  window.location.assign(
-                    `/${encodeURIComponent(courtId)}/matches/${encodeURIComponent(result.match.id)}`,
-                  )
-                }
-              />
-              <MatchOptionCard
                 variant="new"
                 title="Empezar nuevo partido"
                 description="Configura los jugadores, reglas y condiciones del partido."
@@ -82,6 +65,32 @@ export default function CourtSetupPage({courtId}) {
                   window.location.assign(`/${encodeURIComponent(courtId)}/matches/new`)
                 }
               />
+              {hasActiveMatch && (
+                <MatchOptionCard
+                  variant="current"
+                  title="Ver partido actual"
+                  description="Consulta el marcador y el estado del partido actual."
+                  descriptionId="current-match-description"
+                  onClick={() =>
+                    window.location.assign(
+                      `/${encodeURIComponent(courtId)}/matches/${encodeURIComponent(result.match.id)}`,
+                    )
+                  }
+                />
+              )}
+              {result.lastFinishedMatch && (
+                <MatchOptionCard
+                  variant="last"
+                  title="Ver último partido"
+                  description="Consulta los resultados y las estadísticas del último partido terminado."
+                  descriptionId="last-match-description"
+                  onClick={() =>
+                    window.location.assign(
+                      `/${encodeURIComponent(courtId)}/matches/${encodeURIComponent(result.lastFinishedMatch.id)}`,
+                    )
+                  }
+                />
+              )}
             </div>
             {notice && (
               <p className="setup-notice" role="status">

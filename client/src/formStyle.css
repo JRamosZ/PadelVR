@@ -1230,16 +1230,15 @@ button:disabled {
 }
 
 .setup-card-current {
-  background-image: url("/images/match-scoreboard.svg");
+  background-image: url("/images/live-match-court.svg");
   background-position: center, center, center;
 }
 
+.setup-card-last {
+  background-image: url("/images/match-scoreboard.svg");
+}
+
 .setup-card-new {
-  min-height: 195px;
-  border-color: rgba(181, 184, 185, 0.55);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 18px 36px rgba(0, 0, 0, 0.23);
   background-image: url("/images/padel-racket.jpg");
 }
 
@@ -1290,12 +1289,6 @@ button:disabled {
   border-radius: 50%;
   background: rgba(204, 157, 64, 0.13);
   color: #e1b656;
-}
-
-.setup-card-new .setup-card-icon {
-  border-color: rgba(224, 224, 224, 0.58);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--color-text-primary);
 }
 
 .setup-card-icon svg {
@@ -1424,11 +1417,13 @@ button:disabled {
 .setup-footer {
   width: min(100%, 340px);
   margin: 0 auto;
-  padding: 0 0 27px;
+  height: auto;
+  padding: 8px 0 clamp(52px, 8vh, 76px);
   display: grid;
   grid-template-columns: 1fr 32px 1fr;
   align-items: center;
   gap: 18px;
+  border-top: 0;
   color: #d0a44f;
 }
 
@@ -1497,10 +1492,6 @@ button:disabled {
     background-position: 57% center;
   }
 
-  .setup-card-new {
-    min-height: 196px;
-  }
-
   .setup-card::before,
   .setup-card-new::before {
     background: linear-gradient(90deg, rgba(10, 11, 11, 0.97) 0%, rgba(10, 11, 11, 0.88) 48%, rgba(10, 11, 11, 0.38) 78%, rgba(10, 11, 11, 0.18) 100%);
@@ -1536,9 +1527,6 @@ button:disabled {
     font-size: 13px;
   }
 
-  .setup-footer {
-    padding-bottom: 22px;
-  }
 }
 
 @media (max-width: 380px) {
@@ -1643,6 +1631,10 @@ button:disabled {
 .match-setup-body {
   width: min(100%, 900px);
   margin: 0 auto;
+}
+
+.match-setup-stage-mode {
+  padding-bottom: clamp(64px, 10vh, 108px);
 }
 
 .match-setup-progress {
@@ -1884,18 +1876,8 @@ button:disabled {
   stroke-width: 1.5;
 }
 
-.mode-card.is-selected .mode-feature-star,
-.mode-feature-star {
-  color: var(--color-brand-gold-light);
-  font-size: 17px;
-  line-height: 1;
-}
-
-.mode-feature-outline,
-.mode-feature-ban {
-  color: #d0d1d0;
-  font-size: 19px;
-  line-height: 1;
+.mode-card.is-selected .mode-feature-icon {
+  stroke: var(--color-brand-gold-light);
 }
 
 .mode-card-selected {

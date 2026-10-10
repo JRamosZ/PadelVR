@@ -7,7 +7,7 @@ test("returns predefined match modes and a customizable mode", async () => {
   const predefinedModes = {
     TRADITIONAL: {
       id: "TRADITIONAL",
-      name: "Torneo",
+      name: "Profesional",
       format: {setsToWin: 2},
       rules: {setEndingStrategy: "TIE_BREAK"},
     },
@@ -49,9 +49,31 @@ test("includes a readable scoring strategy in each selectable mode", async () =>
   assert.equal(modes[0].rules.setEndingStrategy, "TIE_BREAK");
   assert.equal(modes[1].rules.setEndingStrategy, "FIRST_TO_SIX");
   assert.equal(modes[2].rules.setEndingStrategy, "TWO_GAME_LEAD");
-  assert.ok(
-    modes[3].features.some((feature) =>
-      feature.includes("punto decisivo, ventajas ilimitadas o punto de oro"),
-    ),
-  );
+  assert.deepEqual(modes[3].features, [
+    "1 o 3 sets",
+    "6 juegos por set",
+    "Punto decisivo, ventajas o punto de oro",
+    "Tie-break, primero a 6 o diferencia de 2 juegos",
+  ]);
+});
+
+test("assigns consistent feature icon categories to every match mode", async () => {
+  const getMatchModes = createGetMatchModesUseCase(matchModes);
+  const modes = await getMatchModes();
+
+  for (const mode of modes) {
+    assert.equal(mode.features.length, mode.featureTypes.length);
+  }
+  assert.deepEqual(modes[0].featureTypes, [
+    "sets",
+    "games",
+    "advantages",
+    "ending",
+  ]);
+  assert.deepEqual(modes[3].featureTypes, [
+    "sets",
+    "games",
+    "advantages",
+    "ending",
+  ]);
 });

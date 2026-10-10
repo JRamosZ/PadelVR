@@ -1,7 +1,7 @@
 const matchModes = {
   TRADITIONAL: {
     id: "TRADITIONAL",
-    name: "Torneo",
+    name: "Profesional",
     description: "Ideal para partidos competitivos y torneos.",
     icon: "trophy",
     features: [
@@ -10,6 +10,7 @@ const matchModes = {
       "Ventajas y punto de oro tras 2 ventajas",
       "Tie-break en 6-6",
     ],
+    featureTypes: ["sets", "games", "advantages", "ending"],
     format: {
       type: "BEST_OF_THREE",
       setsToWin: 2,
@@ -41,6 +42,7 @@ const matchModes = {
       "Sin ventajas (punto decisivo)",
       "Primero en llegar a 6 juegos (sin tie-break)",
     ],
+    featureTypes: ["sets", "games", "advantages", "ending"],
     format: {
       type: "SINGLE_SET",
       setsToWin: 1,
@@ -71,6 +73,7 @@ const matchModes = {
       "Ventajas ilimitadas",
       "Sin tie-break; gana con 2 juegos de diferencia",
     ],
+    featureTypes: ["sets", "games", "advantages", "ending"],
     format: {
       type: "SINGLE_SET",
       setsToWin: 1,

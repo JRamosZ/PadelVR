@@ -22,6 +22,15 @@ function NewMatchIcon() {
   );
 }
 
+function LastMatchIcon() {
+  return (
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M13 8h22v32H13zM18 16h12M18 22h12M18 28h7" />
+      <path d="m28 33 3 3 6-7" />
+    </svg>
+  );
+}
+
 export default function MatchOptionCard({
   variant,
   title,
@@ -30,7 +39,11 @@ export default function MatchOptionCard({
   onClick,
   descriptionId,
 }) {
-  const Icon = variant === "current" ? ScoreIcon : NewMatchIcon;
+  const Icon = variant === "new"
+    ? NewMatchIcon
+    : variant === "last"
+      ? LastMatchIcon
+      : ScoreIcon;
 
   return (
     <button

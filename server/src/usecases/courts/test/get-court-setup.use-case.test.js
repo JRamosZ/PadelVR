@@ -13,7 +13,11 @@ test("does not query matches when the court is unavailable", async () => {
       },
     },
     {
-      async findLatestByCourtId() {
+      async findLatestActiveByCourtId() {
+        matchQueryCount += 1;
+        return null;
+      },
+      async findLatestFinishedByCourtId() {
         matchQueryCount += 1;
         return null;
       },
@@ -25,13 +29,15 @@ test("does not query matches when the court is unavailable", async () => {
   assert.deepEqual(result, {
     court: {id: courtId, name: "Cancha 1", status: "MAINTENANCE"},
     match: null,
+    lastFinishedMatch: null,
   });
   assert.equal(matchQueryCount, 0);
 });
 
-test("returns the latest match when the court is available", async () => {
+test("returns the active match and the latest finished match when the court is available", async () => {
   const startedAt = new Date("2026-10-06T12:00:00.000Z");
-  let queriedCourtId;
+  const finishedAt = new Date("2026-10-06T13:00:00.000Z");
+  const queriedCourtIds = [];
   const getCourtSetup = createGetCourtSetupUseCase(
     {
       async findById() {
@@ -39,20 +45,29 @@ test("returns the latest match when the court is available", async () => {
       },
     },
     {
-      async findLatestByCourtId(id) {
-        queriedCourtId = id;
+      async findLatestActiveByCourtId(id) {
+        queriedCourtIds.push(id);
         return {id: "match-1", status: "ACTIVE", startedAt};
+      },
+      async findLatestFinishedByCourtId(id) {
+        queriedCourtIds.push(id);
+        return {id: "match-2", status: "FINISHED", finishedAt};
       },
     },
   );
 
   const result = await getCourtSetup(courtId);
 
-  assert.equal(queriedCourtId, courtId);
+  assert.deepEqual(queriedCourtIds, [courtId, courtId]);
   assert.deepEqual(result.match, {
     id: "match-1",
     status: "ACTIVE",
     startedAt,
+  });
+  assert.deepEqual(result.lastFinishedMatch, {
+    id: "match-2",
+    status: "FINISHED",
+    finishedAt,
   });
 });
 
@@ -65,7 +80,10 @@ test("rejects invalid court IDs before accessing repositories", async () => {
       },
     },
     {
-      async findLatestByCourtId() {
+      async findLatestActiveByCourtId() {
+        repositoryCalled = true;
+      },
+      async findLatestFinishedByCourtId() {
         repositoryCalled = true;
       },
     },

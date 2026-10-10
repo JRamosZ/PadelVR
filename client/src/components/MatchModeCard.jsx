@@ -35,33 +35,55 @@ function ModeIcon({type}) {
   );
 }
 
-function FeatureIcon({index, customizable, feature}) {
-  if (index === 2 && feature.includes("Punto de oro")) {
-    return <span className="mode-feature-icon mode-feature-star">★</span>;
+function getFeatureType(feature, configuredType) {
+  if (configuredType) return configuredType;
+  const normalizedFeature = feature.toLocaleLowerCase();
+  if (normalizedFeature.includes("set")) return "sets";
+  if (normalizedFeature.includes("juego") || normalizedFeature.includes("game")) return "games";
+  if (
+    normalizedFeature.includes("ventaja") ||
+    normalizedFeature.includes("puntuación") ||
+    normalizedFeature.includes("punto de oro") ||
+    normalizedFeature.includes("punto decisivo")
+  ) {
+    return "advantages";
   }
-
-  if (index === 2 && feature.startsWith("Sin ventajas")) {
-    return <span className="mode-feature-icon mode-feature-ban">⊘</span>;
+  if (
+    normalizedFeature.includes("tie-break") ||
+    normalizedFeature.includes("diferencia") ||
+    normalizedFeature.includes("llegar a")
+  ) {
+    return "ending";
   }
+  return "games";
+}
 
-  if (index === 2 && feature.startsWith("Ventajas ilimitadas")) {
-    return <span className="mode-feature-icon mode-feature-star">∞</span>;
-  }
-
-  if (customizable && index === 1) {
-    return <span className="mode-feature-icon mode-feature-outline">☆</span>;
-  }
-
-  if (customizable && index === 2) {
-    return <span className="mode-feature-icon mode-feature-outline">↔</span>;
-  }
-
+function FeatureIcon({type}) {
   return (
     <svg className="mode-feature-icon" viewBox="0 0 20 20" aria-hidden="true">
-      {index === 0 ? (
-        <path d="m3 7 7-4 7 4-7 4-7-4Zm0 4 7 4 7-4M3 15l7 4 7-4" />
-      ) : (
-        <path d="M3 3h6v6H3zM11 3h6v6h-6zM3 11h6v6H3zM11 11h6v6h-6z" />
+      {type === "sets" && (
+        <>
+          <rect x="3" y="3" width="12" height="14" rx="1" />
+          <path d="M6 6h6M6 9h6M6 12h3M6 17h11V6" />
+        </>
+      )}
+      {type === "games" && (
+        <>
+          <rect x="2.5" y="3" width="15" height="14" rx="1" />
+          <path d="M10 3v14M2.5 10h15M6 6.5h1m6 7h1" />
+        </>
+      )}
+      {type === "advantages" && (
+        <>
+          <circle cx="10" cy="10" r="7" />
+          <path d="M10 6v8M6 10h8" />
+        </>
+      )}
+      {type === "ending" && (
+        <>
+          <path d="M5 18V3m0 1h10l-2 3 2 3H5" />
+          <path d="M8 6h2v2H8z" />
+        </>
       )}
     </svg>
   );
@@ -89,7 +111,7 @@ export default function MatchModeCard({mode, selected, onSelect}) {
       <span className="mode-card-features">
         {mode.features.map((feature, index) => (
           <span className="mode-card-feature" key={feature}>
-            <FeatureIcon index={index} customizable={mode.isCustomizable} feature={feature} />
+            <FeatureIcon type={getFeatureType(feature, mode.featureTypes?.[index])} />
             <span>{feature}</span>
           </span>
         ))}

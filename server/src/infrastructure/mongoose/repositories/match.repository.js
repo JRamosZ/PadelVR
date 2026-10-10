@@ -28,6 +28,29 @@ export function createMatchRepository() {
       };
     },
 
+    async findLatestActiveByCourtId(courtId) {
+      const match = await MatchModel.findOne({
+        courtId,
+        status: {$in: ["READY", "IN_PROGRESS", "PAUSED"]},
+      })
+        .sort({createdAt: -1, _id: -1})
+        .select("_id status startedAt")
+        .lean();
+
+      if (!match) return null;
+      return {...match, id: match._id.toString()};
+    },
+
+    async findLatestFinishedByCourtId(courtId) {
+      const match = await MatchModel.findOne({courtId, status: "FINISHED"})
+        .sort({finishedAt: -1, _id: -1})
+        .select("_id status finishedAt")
+        .lean();
+
+      if (!match) return null;
+      return {...match, id: match._id.toString()};
+    },
+
     async create(matchData) {
       const match = await MatchModel.create(matchData);
 

@@ -20,6 +20,7 @@ export function useCourtSetup(courtId) {
           status: "ready",
           court: data.court,
           match: data.match,
+          lastFinishedMatch: data.lastFinishedMatch,
         });
       } catch (error) {
         if (error.name === "AbortError") return;
