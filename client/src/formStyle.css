@@ -1186,11 +1186,12 @@ button:disabled {
 
 .setup-card {
   position: relative;
-  min-height: 210px;
+  height: 210px;
   width: 100%;
   padding: 29px 38px;
   display: grid;
   grid-template-columns: 68px minmax(0, 1fr) 32px;
+  grid-template-rows: 62px minmax(0, 1fr);
   align-items: end;
   gap: 20px;
   overflow: hidden;
@@ -1485,9 +1486,10 @@ button:disabled {
   }
 
   .setup-card {
-    min-height: 208px;
+    height: 208px;
     padding: 21px 22px;
     grid-template-columns: minmax(0, 1fr) 26px;
+    grid-template-rows: 56px minmax(0, 1fr);
     gap: 12px;
     background-position: 57% center;
   }
